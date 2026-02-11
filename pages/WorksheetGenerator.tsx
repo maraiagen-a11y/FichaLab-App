@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import remarkGfm from 'remark-gfm';
-import ReactMarkdown from 'react-markdown';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css'; // Estilos del editor
 import { generateWorksheet } from '../services/geminiService';
 import { supabase } from '../services/supabaseClient';
-import { EducationLevel, Subject, User, UserPlan, WorksheetResponse } from '../types';
+import { EducationLevel, Subject, User, UserPlan } from '../types';
 import { Button } from '../components/Button';
 import { PLAN_LIMITS } from '../constants';
 import { 
   Sparkles, 
   Printer, 
-  RefreshCw, 
+  Save, 
   LayoutTemplate, 
-  Lock, 
-  AlertCircle,
+  RefreshCw,
+  FileText
 } from 'lucide-react';
 
 interface WorksheetGeneratorProps {
@@ -22,19 +22,23 @@ interface WorksheetGeneratorProps {
 
 export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, onWorksheetGenerated }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+  // Estados del formulario
   const [subject, setSubject] = useState<Subject>(Subject.MATH);
   const [level, setLevel] = useState<EducationLevel>(EducationLevel.PRIMARY);
   const [topic, setTopic] = useState('');
   const [count, setCount] = useState(5);
   const [instructions, setInstructions] = useState('');
 
-  const [result, setResult] = useState<WorksheetResponse | null>(null);
+  // Estado del contenido (HTML editable)
+  const [editableContent, setEditableContent] = useState<string>(''); 
 
   const limits = PLAN_LIMITS[user.plan];
   const canGenerate = user.plan === UserPlan.PREMIUM || user.generatedCount < limits.maxGenerations;
 
+  // --- 1. GENERAR (Llama a la IA y descuenta crédito) ---
   const handleGenerate = async () => {
     if (!canGenerate) return;
     if (!topic.trim()) {
@@ -44,10 +48,10 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
 
     setIsLoading(true);
     setError(null);
-    setResult(null);
+    setEditableContent(''); // Limpiamos previo
 
     try {
-      // 1. Generamos el contenido con la IA
+      // Pedimos a Gemini el contenido (Ahora devuelve HTML gracias al cambio en el servicio)
       const response = await generateWorksheet({
         subject,
         level,
@@ -56,42 +60,53 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
         instructions
       });
 
-      // 2. Si NO es invitado, guardamos en la base de datos y actualizamos contador
+      setEditableContent(response.content);
+
+      // Descontamos crédito SI NO es invitado
       if (user.id !== 'guest') {
-        
-        // A) Guardar la ficha en la tabla 'resources'
-        const { error: insertError } = await supabase
-          .from('resources')
-          .insert([
-            {
-              user_id: user.id,
-              title: `${subject}: ${topic} (${level})`,
-              content: response.content,
-              type: 'worksheet'
-            }
-          ]);
-
-        if (insertError) throw insertError;
-
-        // B) --- AUTOMATIZACIÓN: SUMAR +1 AL CONTADOR ---
         const { error: updateError } = await supabase
           .from('profiles')
           .update({ generated_count: user.generatedCount + 1 })
           .eq('id', user.id);
 
         if (!updateError) {
-          // Avisamos a la App para que refresque el número en pantalla
-          onWorksheetGenerated(); 
+          onWorksheetGenerated(); // Actualiza el contador visual en la App
         }
       }
 
-      setResult(response);
-
     } catch (err) {
       console.error(err);
-      setError("Error al guardar o generar. Inténtalo de nuevo.");
+      setError("Error al conectar con la IA. Inténtalo de nuevo.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // --- 2. GUARDAR (Guarda TU versión editada) ---
+  const handleSave = async () => {
+    if (!editableContent || user.id === 'guest') return;
+
+    setIsSaving(true);
+    try {
+      const { error: insertError } = await supabase
+        .from('resources')
+        .insert([
+          {
+            user_id: user.id,
+            title: `${subject}: ${topic} (${level})`,
+            content: editableContent, // Guardamos lo que hay en el editor
+            type: 'worksheet'
+          }
+        ]);
+
+      if (insertError) throw insertError;
+      alert('¡Ficha guardada en tu Biblioteca!');
+      
+    } catch (err) {
+      console.error(err);
+      alert('Error al guardar la ficha.');
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -99,36 +114,42 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
     window.print();
   };
 
+  // Configuración de la barra de herramientas del editor (Word-like)
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'color': [] }, { 'background': [] }],
+      ['clean']
+    ],
+  };
+
   return (
-    // CONTENEDOR PRINCIPAL CON ARREGLO DE IMPRESIÓN (overflow-visible)
     <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)] bg-slate-100 overflow-hidden font-sans print:h-auto print:overflow-visible print:bg-white">
       
-      {/* Estilos CSS Específicos para Impresión perfecta */}
+      {/* Estilos CSS para Impresión y Editor */}
       <style>{`
+        /* Personalización del Editor */
+        .ql-container { font-family: inherit; font-size: 16px; }
+        .ql-editor { min-height: 250mm; padding: 20mm; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .ql-toolbar { background: #f8fafc; border-bottom: 1px solid #e2e8f0 !important; border-top: none !important; border-left: none !important; border-right: none !important; border-radius: 8px 8px 0 0; }
+        .ql-container.ql-snow { border: none !important; }
+        
+        /* Reglas de Impresión */
         @media print {
-          @page {
-            margin: 20mm;
-            size: auto;
-          }
-          body {
-            background: white;
-            height: auto;
-            overflow: visible;
-          }
-          ::-webkit-scrollbar {
-            display: none;
-          }
-          h1, h2, h3 {
-            break-after: avoid;
-          }
-          li, p, blockquote {
-            break-inside: avoid;
-          }
+          @page { margin: 15mm; size: auto; }
+          body { background: white; height: auto; overflow: visible; }
+          /* Ocultamos todo lo que no sea el contenido de la ficha */
+          nav, aside, .no-print, .ql-toolbar { display: none !important; }
+          /* Hacemos que el editor ocupe todo */
+          .ql-editor { box-shadow: none; padding: 0; min-height: auto; }
+          .print-container { position: absolute; top: 0; left: 0; width: 100%; margin: 0; padding: 0; }
         }
       `}</style>
 
-      {/* --- PANEL IZQUIERDO: CONTROLES --- */}
-      <div className="w-full lg:w-[400px] bg-white border-r border-slate-200 flex flex-col h-full z-10 print:hidden shadow-xl lg:shadow-none">
+      {/* --- PANEL IZQUIERDO: CONTROLES (Igual que antes) --- */}
+      <div className="w-full lg:w-[400px] bg-white border-r border-slate-200 flex flex-col h-full z-10 print:hidden shadow-xl lg:shadow-none no-print">
         <div className="p-6 border-b border-slate-100 bg-white">
           <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
             <LayoutTemplate className="w-5 h-5 text-brand-600" />
@@ -204,109 +225,79 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
               onClick={handleGenerate} 
               isLoading={isLoading} 
               disabled={!canGenerate || !topic}
-              className={`w-full py-3 shadow-lg ${!canGenerate ? 'bg-slate-400 hover:bg-slate-400 cursor-not-allowed' : 'bg-brand-600 shadow-brand-500/30'}`}
+              className={`w-full py-3 shadow-lg ${!canGenerate ? 'bg-slate-400 cursor-not-allowed' : 'bg-brand-600 shadow-brand-500/30'}`}
             >
               {isLoading ? 'Generando...' : (
                 <span className="flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 mr-2" /> {result ? 'Regenerar' : 'Generar Ficha'}
+                  <Sparkles className="w-4 h-4 mr-2" /> {editableContent ? 'Regenerar (Borrador)' : 'Generar Ficha'}
                 </span>
               )}
             </Button>
-            {!canGenerate && (
-               <p className="text-xs text-center text-red-500 mt-2 font-medium">Límite gratuito alcanzado.</p>
-            )}
+            {!canGenerate && <p className="text-xs text-center text-red-500 mt-2">Límite alcanzado.</p>}
             {error && <p className="text-xs text-center text-red-500 mt-2">{error}</p>}
           </div>
         </div>
       </div>
 
-      {/* --- PANEL DERECHO: VISTA PREVIA --- */}
+      {/* --- PANEL DERECHO: VISTA PREVIA & EDITOR --- */}
       <div className="flex-1 flex flex-col h-full bg-slate-200 overflow-hidden relative print:bg-white print:overflow-visible print:h-auto print:block">
         
-        {/* Barra Superior Fija (Se oculta al imprimir) */}
-        {result && (
-          <div className="h-14 border-b border-slate-300 bg-white px-6 flex items-center justify-between shrink-0 print:hidden z-20 shadow-sm">
-            <div className="text-sm font-medium text-slate-600">Vista Previa A4</div>
+        {/* Barra Superior de Acciones */}
+        {editableContent && (
+          <div className="h-16 border-b border-slate-300 bg-white px-6 flex items-center justify-between shrink-0 print:hidden z-20 shadow-sm no-print">
+            <div className="flex items-center gap-2 text-sm font-medium text-slate-600">
+               <FileText className="w-4 h-4 text-brand-600" />
+               Editor de Texto
+            </div>
             <div className="flex gap-2">
                <Button variant="outline" size="sm" onClick={handleGenerate} title="Regenerar">
                 <RefreshCw className="w-4 h-4 text-slate-600" />
               </Button>
               <Button size="sm" onClick={handlePrint} className="bg-slate-800 text-white hover:bg-slate-700">
-                <Printer className="w-4 h-4 mr-2" /> Imprimir / PDF
+                <Printer className="w-4 h-4 mr-2" /> Imprimir
               </Button>
+              {user.id !== 'guest' && (
+                <Button size="sm" onClick={handleSave} isLoading={isSaving} className="bg-green-600 text-white hover:bg-green-700">
+                    <Save className="w-4 h-4 mr-2" /> Guardar
+                </Button>
+              )}
             </div>
           </div>
         )}
 
-        {/* ÁREA DE SCROLL (DOCUMENTO) */}
-        <div className="flex-1 overflow-y-auto p-8 print:p-0 print:overflow-visible print:h-auto">
+        {/* ÁREA DE TRABAJO (EDITOR) */}
+        <div className="flex-1 overflow-y-auto p-8 print:p-0 print:overflow-visible print:h-auto print-container">
           
           <div className="max-w-[210mm] mx-auto print:w-full print:max-w-none">
             
-            {!result && (
-              <div className="min-h-[297mm] bg-white shadow-xl flex flex-col items-center justify-center text-slate-300 border border-slate-200 rounded-sm">
-                 {isLoading ? (
-                    <div className="flex flex-col items-center animate-pulse">
-                      <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mb-4"></div>
-                      <p className="text-brand-600 font-medium">Redactando contenido...</p>
-                    </div>
-                 ) : (
-                    <>
-                      <LayoutTemplate className="w-20 h-20 mb-4 opacity-20" />
-                      <p>Configura y genera tu primera ficha.</p>
-                    </>
-                 )}
+            {/* Estado Vacío */}
+            {!editableContent && !isLoading && (
+              <div className="min-h-[297mm] bg-white shadow-xl flex flex-col items-center justify-center text-slate-300 border border-slate-200 rounded-sm print:hidden">
+                <LayoutTemplate className="w-20 h-20 mb-4 opacity-20" />
+                <p>Configura y genera tu primera ficha para empezar a editar.</p>
               </div>
             )}
 
-            {/* CONTENIDO DE LA FICHA (PÁGINAS) */}
-            {result && !isLoading && (
-              <div className="print:w-full">
-                <div className="bg-white shadow-2xl min-h-[297mm] p-[20mm] md:p-[25mm] print:shadow-none print:p-0 print:m-0 text-slate-900 leading-relaxed">
-                  
-                  {/* Cabecera del Documento */}
-                  <div className="border-b-2 border-slate-900 pb-6 mb-10 flex justify-between items-end">
-                     <div>
-                       <h1 className="text-4xl font-black text-slate-900 mb-1 uppercase tracking-tighter m-0 p-0">{subject}</h1>
-                       <p className="text-slate-600 font-bold text-lg m-0">{level} • {topic}</p>
-                     </div>
-                     <div className="text-right hidden md:block print:block">
-                       <div className="text-sm text-slate-400 mb-3 font-medium">Fecha: _________________</div>
-                       <div className="text-sm text-slate-400 font-medium">Nombre: _________________________</div>
-                     </div>
+            {/* Estado Cargando */}
+            {isLoading && (
+               <div className="min-h-[297mm] bg-white shadow-xl flex flex-col items-center justify-center text-slate-300 border border-slate-200 rounded-sm print:hidden">
+                  <div className="flex flex-col items-center animate-pulse">
+                      <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mb-4"></div>
+                      <p className="text-brand-600 font-medium">La IA está escribiendo tu ficha...</p>
                   </div>
+               </div>
+            )}
 
-                  {/* Markdown Renderizado */}
-                  <div className="prose prose-slate max-w-none prose-p:text-justify prose-headings:font-bold prose-headings:text-slate-900 print:prose-sm">
-                    <ReactMarkdown 
-                      remarkPlugins={[remarkGfm]} 
-                      components={{
-                        h1: ({node, ...props}) => <h2 className="text-2xl font-bold border-b border-slate-300 pb-2 mt-8 mb-6 text-brand-700" {...props} />,
-                        h2: ({node, ...props}) => <h3 className="text-xl font-bold mt-8 mb-4 text-slate-800 uppercase tracking-wide" {...props} />,
-                        
-                        p: ({node, ...props}) => <p className="mb-4 text-slate-700 leading-relaxed" {...props} />,
-                        
-                        // Listas bien maquetadas
-                        ul: ({node, ...props}) => <ul className="list-disc list-outside ml-5 space-y-2 mb-6" {...props} />,
-                        ol: ({node, ...props}) => <ol className="list-decimal list-outside ml-5 space-y-4 mb-6 font-medium text-slate-800" {...props} />,
-                        
-                        li: ({node, ...props}) => <li className="pl-2" {...props} />,
-                        
-                        blockquote: ({node, ...props}) => (
-                          <div className="border-l-4 border-brand-500 bg-brand-50/50 p-4 my-6 italic text-slate-700 rounded-r-lg">
-                            {props.children}
-                          </div>
-                        ),
-                        
-                        strong: ({node, ...props}) => <span className="font-bold text-slate-900" {...props} />,
-                        hr: ({node, ...props}) => <hr className="my-10 border-t border-slate-200" {...props} />,
-                      }}
-                    >
-                      {result.content}
-                    </ReactMarkdown>
-                  </div>
-
-                </div>
+            {/* EDITOR REACT QUILL */}
+            {editableContent && !isLoading && (
+              <div className="bg-white shadow-2xl print:shadow-none">
+                <ReactQuill 
+                  theme="snow"
+                  value={editableContent}
+                  onChange={setEditableContent}
+                  modules={modules}
+                  // El editor se expandirá para parecer una hoja A4
+                />
               </div>
             )}
             
