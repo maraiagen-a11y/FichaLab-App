@@ -12,11 +12,12 @@
     "@google/genai": "^1.40.0",
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.95.3",
+    "html2pdf.js": "^0.14.0",
     "lucide-react": "^0.563.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-markdown": "^10.1.0",
-    "react-quill": "^2.0.0",
+    "react-quill-new": "^3.8.3",
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
