@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import './worksheet-preview.css'; 
 // Importamos los iconos nuevos: Edit3 (lápiz), Save (guardar), RotateCcw (cancelar)
 import { Trash2, Download, Eye, X, FileText, Search, Edit3, Save, RotateCcw } from 'lucide-react';
 
