@@ -1,10 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { generateWorksheet } from "../services/geminiService";
 import { Subject, EducationLevel, User } from "../types"; // Importamos User
-import './worksheet-preview.css'; 
-
 import { supabase } from "../lib/supabase"; 
-
 import { 
   Download, FileText, Copy, RefreshCw, Settings, Save, Crown, AlertCircle 
 } from "lucide-react"; 
