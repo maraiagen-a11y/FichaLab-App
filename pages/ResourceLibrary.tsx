@@ -1,233 +1,208 @@
-import React, { useEffect, useState } from 'react';
-import { User, Resource } from '../types';
-import { supabase } from '../services/supabaseClient';
-import { Search, Trash2, Eye, FileText, X, Printer, Calendar, Globe, Users, Download } from 'lucide-react';
-import { Button } from '../components/Button';
-import 'react-quill-new/dist/quill.snow.css'; 
+import React, { useEffect, useState, useRef } from 'react';
+import { supabase } from '../lib/supabase';
+import './worksheet-preview.css'; 
+// Importamos los iconos nuevos: Edit3 (lápiz), Save (guardar), RotateCcw (cancelar)
+import { Trash2, Download, Eye, X, FileText, Search, Edit3, Save, RotateCcw } from 'lucide-react';
 
-// @ts-ignore
-import html2pdf from 'html2pdf.js';
+// Importamos el editor
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
-const MOCK_RESOURCES: Resource[] = [{
-  id: 'mock-1', user_id: 'guest', title: 'Ejemplo', content: '<p>Ejemplo...</p>', created_at: new Date().toISOString(), type: 'worksheet', is_public: true
-}];
-
-interface ResourceLibraryProps { user: User; }
-
-export const ResourceLibrary: React.FC<ResourceLibraryProps> = ({ user }) => {
-  const [activeTab, setActiveTab] = useState<'private' | 'public'>('private');
-  const [resources, setResources] = useState<Resource[]>([]);
+export const ResourceLibrary = () => {
+  const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedResource, setSelectedResource] = useState<Resource | null>(null);
-  const [isDownloading, setIsDownloading] = useState(false);
+  const [selectedResource, setSelectedResource] = useState<any>(null);
   
-  const isGuest = user.id === 'guest';
+  // --- NUEVOS ESTADOS PARA EDICIÓN ---
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedContent, setEditedContent] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => { fetchResources(); }, [user.id, activeTab]);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  // 1. CARGAR FICHAS
+  useEffect(() => { fetchResources(); }, []);
 
   const fetchResources = async () => {
-    if (isGuest && activeTab === 'private') { setResources(MOCK_RESOURCES); setLoading(false); return; }
     try {
-      setLoading(true);
-      let query = supabase.from('resources').select('*').order('created_at', { ascending: false });
-      if (activeTab === 'private') query = query.eq('user_id', user.id);
-      else query = query.eq('is_public', true);
-      const { data, error } = await query;
+      const { data, error } = await supabase.from('resources').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       setResources(data || []);
-    } catch (error) { console.error(error); } finally { setLoading(false); }
+    } catch (error) { console.error('Error:', error); } finally { setLoading(false); }
   };
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
+  // 2. BORRAR
+  const handleDelete = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (isGuest || !window.confirm('¿Borrar ficha?')) return;
-    const { error } = await supabase.from('resources').delete().eq('id', id);
-    if (!error) {
+    if (!confirm('¿Borrar esta ficha?')) return;
+    try {
+      await supabase.from('resources').delete().eq('id', id);
       setResources(resources.filter(r => r.id !== id));
       if (selectedResource?.id === id) setSelectedResource(null);
+    } catch (error) { alert('Error al borrar'); }
+  };
+
+  // 3. SELECCIONAR FICHA (Prepara el modo edición por si acaso)
+  const handleSelectResource = (res: any) => {
+    setSelectedResource(res);
+    setIsEditing(false); // Al cambiar de ficha, siempre empezamos en modo lectura
+    setEditedContent(res.content); // Cargamos el contenido en el estado del editor
+  };
+
+  // 4. GUARDAR CAMBIOS (UPDATE EN SUPABASE)
+  const handleSaveChanges = async () => {
+    if (!selectedResource) return;
+    setIsSaving(true);
+    try {
+      // Actualizamos en la base de datos
+      const { error } = await supabase
+        .from('resources')
+        .update({ content: editedContent })
+        .eq('id', selectedResource.id);
+
+      if (error) throw error;
+
+      // Actualizamos el estado local para que se vea reflejado sin recargar
+      const updatedResource = { ...selectedResource, content: editedContent };
+      setSelectedResource(updatedResource);
+      setResources(resources.map(r => r.id === selectedResource.id ? updatedResource : r));
+      
+      setIsEditing(false); // Volvemos al modo lectura
+      alert("✅ Cambios guardados correctamente");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Error al guardar cambios");
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const togglePublic = async (resource: Resource, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (isGuest) return;
-    const newValue = !resource.is_public;
-    const { error } = await supabase.from('resources').update({ is_public: newValue }).eq('id', resource.id);
-    if (!error) setResources(resources.map(r => r.id === resource.id ? { ...r, is_public: newValue } : r));
-  };
+  // 5. IFRAME MAGICO (Solo se activa si NO estamos editando)
+  useEffect(() => {
+    if (selectedResource && !isEditing && iframeRef.current) {
+      const doc = iframeRef.current.contentWindow?.document;
+      if (doc) { doc.open(); doc.write(selectedResource.content); doc.close(); }
+    }
+  }, [selectedResource, isEditing]); // Dependencia clave: isEditing
 
-  // --- FUNCIÓN DE DESCARGA PDF (ESTRATEGIA VISIBLE) ---
-  const handleDownloadPDF = () => {
-    if (!selectedResource) return;
-    setIsDownloading(true);
-
-    // 1. Crear contenedor temporal VISIBLE (Overlay)
-    const container = document.createElement('div');
-    container.id = 'pdf-generator-container';
-    
-    // Estilos para que se vea bien y tape la pantalla momentáneamente
-    container.style.position = 'fixed';
-    container.style.top = '0';
-    container.style.left = '0';
-    container.style.width = '100%';
-    container.style.height = '100%';
-    container.style.zIndex = '99999'; // Encima de todo
-    container.style.backgroundColor = 'white'; // Fondo blanco puro
-    container.style.overflowY = 'scroll'; // Permite scroll si es largo
-    
-    // Contenedor interno tipo A4 centrado
-    const a4Page = document.createElement('div');
-    a4Page.className = 'ql-editor'; // Usamos estilos de Quill
-    a4Page.innerHTML = selectedResource.content;
-    
-    // Estilos exactos de A4
-    a4Page.style.width = '210mm';
-    a4Page.style.minHeight = '297mm';
-    a4Page.style.padding = '20mm';
-    a4Page.style.margin = '0 auto'; // Centrado
-    a4Page.style.backgroundColor = 'white';
-    a4Page.style.color = 'black'; // Aseguramos texto negro
-
-    // Inyectamos estilos específicos para que se vea bien
-    const style = document.createElement('style');
-    style.innerHTML = `
-      #pdf-generator-container .ql-editor h1 { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; font-size: 2em; color: black; }
-      #pdf-generator-container .ql-editor h2 { margin-top: 30px; margin-bottom: 15px; color: #334155; font-size: 1.5em; }
-      #pdf-generator-container .ql-editor li { margin-bottom: 1.5cm; } /* Espacio para escribir */
-      #pdf-generator-container .ql-editor blockquote { border-left: 4px solid #cbd5e1; padding-left: 15px; color: #475569; font-style: italic; }
-      #pdf-generator-container .ql-editor { font-family: sans-serif; font-size: 16px; line-height: 1.6; }
-    `;
-    
-    container.appendChild(style);
-    container.appendChild(a4Page);
-    document.body.appendChild(container);
-
-    const opt = {
-      margin:       0, 
-      filename:     `${selectedResource.title}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:    { mode: 'css' } 
-    };
-
-    // Pequeño retardo para asegurar que el navegador ha "pintado" el elemento
-    setTimeout(() => {
-        html2pdf().set(opt).from(a4Page).save().then(() => {
-            document.body.removeChild(container); // Quitamos el contenedor
-            setIsDownloading(false);
-        });
-    }, 500); // Medio segundo de espera para asegurar renderizado
-  };
-
-  // --- IMPRESIÓN PRO ---
+  // 6. IMPRIMIR
   const handlePrint = () => {
-    if (!selectedResource) return;
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0';
-    document.body.appendChild(iframe);
-    const doc = iframe.contentWindow?.document;
-    if (!doc) return;
-    doc.open();
-    doc.write(`
-      <html>
-        <head>
-          <title>${selectedResource.title}</title>
-          <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-          <style>
-            @page { margin: 20mm; size: auto; }
-            body { margin: 0; padding: 20mm; font-family: sans-serif; -webkit-print-color-adjust: exact; }
-            .ql-container.ql-snow { border: none !important; }
-            .ql-editor { padding: 0 !important; overflow: visible !important; }
-            li { margin-bottom: 1.5cm; } 
-            h1 { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; } 
-            h2 { margin-top: 30px; margin-bottom: 15px; }
-          </style>
-        </head>
-        <body>
-          <div class="ql-container ql-snow"><div class="ql-editor">${selectedResource.content}</div></div>
-          <script>
-            window.onload = function() { setTimeout(function() { window.focus(); window.print(); }, 500); };
-          </script>
-        </body>
-      </html>
-    `);
-    doc.close();
-    setTimeout(() => { document.body.removeChild(iframe); }, 2000);
+    // Si estamos editando, no dejamos imprimir (primero guarda)
+    if (isEditing) {
+        alert("Por favor, guarda los cambios o cancela la edición antes de imprimir.");
+        return;
+    }
+    iframeRef.current?.contentWindow?.focus();
+    iframeRef.current?.contentWindow?.print();
   };
-
-  const filteredResources = resources.filter(r => r.title.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12 relative font-sans">
+    <div className="flex h-screen bg-gray-50 overflow-hidden font-sans">
       
-      {/* CSS WEB */}
-      <style>{`
-        .ql-editor { font-family: inherit; font-size: 16px; line-height: 1.6; padding: 0 !important; }
-        .ql-editor li { margin-bottom: 1.5cm; padding-left: 0.5rem; }
-        .ql-editor h1 { font-size: 2em; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        .ql-editor h2 { font-size: 1.5em; margin-top: 30px; margin-bottom: 15px; color: #334155; }
-        .ql-editor blockquote { border-left: 4px solid #cbd5e1; padding-left: 15px; color: #475569; font-style: italic; }
-      `}</style>
-
-      {/* CABECERA */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-slate-900">Biblioteca de Recursos</h1>
-        <div className="bg-slate-100 p-1 rounded-xl flex font-medium text-sm">
-            <button onClick={() => setActiveTab('private')} className={`px-4 py-2 rounded-lg ${activeTab === 'private' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>Mis Fichas</button>
-            <button onClick={() => setActiveTab('public')} className={`px-4 py-2 rounded-lg ${activeTab === 'public' ? 'bg-white shadow-sm' : 'text-slate-500'}`}>Galería</button>
+      {/* === LISTA IZQUIERDA === */}
+      <div className="w-[400px] bg-white border-r border-gray-200 flex flex-col z-10 shadow-xl shrink-0">
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2"><FileText className="text-blue-600"/> Biblioteca</h2>
+          <p className="text-sm text-gray-500 mt-1">{resources.length} fichas</p>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {loading ? <div className="p-4 text-center">Cargando...</div> : 
+           resources.map((res) => (
+            <div key={res.id} onClick={() => handleSelectResource(res)}
+              className={`p-4 rounded-lg border cursor-pointer hover:shadow-md ${selectedResource?.id === res.id ? 'border-blue-500 bg-blue-50' : 'bg-white'}`}>
+              <h3 className="font-bold text-gray-800 truncate text-sm">{res.title}</h3>
+              <div className="flex justify-between mt-2">
+                <span className="text-xs bg-gray-100 px-2 py-1 rounded">{res.subject || 'General'}</span>
+                <button onClick={(e) => handleDelete(res.id, e)} className="text-gray-400 hover:text-red-500"><Trash2 size={14}/></button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
-      <div className="bg-white p-2 rounded-xl shadow-sm border border-slate-200">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-            <input type="text" placeholder="Buscar..." className="w-full pl-10 pr-4 py-2.5 rounded-lg focus:outline-none" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-          </div>
-      </div>
-
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[300px]">
-        {loading ? <div className="p-8 text-center text-slate-400">Cargando...</div> : 
-         filteredResources.length === 0 ? <div className="p-8 text-center text-slate-500">No hay fichas.</div> : (
-          <div className="divide-y divide-slate-100">
-            {filteredResources.map((resource) => (
-              <div key={resource.id} className="grid grid-cols-12 gap-4 p-4 items-center hover:bg-slate-50 cursor-pointer" onClick={() => setSelectedResource(resource)}>
-                <div className="col-span-8 font-medium truncate">{resource.title}</div>
-                <div className="col-span-4 flex justify-end gap-2">
-                   {!isGuest && resource.user_id === user.id && (
-                     <button onClick={(e) => togglePublic(resource, e)} className="p-2 text-slate-400 hover:text-blue-600"><Globe className="w-4 h-4"/></button>
-                   )}
-                   <button onClick={(e) => handleDelete(resource.id, e)} className="p-2 text-slate-400 hover:text-red-600"><Trash2 className="w-4 h-4"/></button>
-                </div>
+      {/* === VISOR / EDITOR DERECHA === */}
+      <div className="flex-1 flex flex-col h-full bg-gray-800 relative min-w-0">
+        {selectedResource ? (
+          <>
+            {/* BARRA SUPERIOR DINÁMICA */}
+            <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 z-20">
+              <div className="flex items-center gap-2 overflow-hidden">
+                {/* Cambiamos el icono según el modo */}
+                {isEditing ? <Edit3 className="text-orange-500" size={20}/> : <Eye className="text-blue-600" size={20}/>}
+                <span className="text-gray-500 text-sm hidden sm:inline">{isEditing ? "Editando:" : "Viendo:"}</span>
+                <h3 className="font-bold text-gray-800 truncate max-w-md">{selectedResource.title}</h3>
               </div>
-            ))}
+              
+              <div className="flex gap-2">
+                {isEditing ? (
+                  /* --- BOTONES MODO EDICIÓN --- */
+                  <>
+                    <button 
+                      onClick={() => setIsEditing(false)} 
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 text-sm font-medium"
+                    >
+                      <RotateCcw size={16}/> Cancelar
+                    </button>
+                    <button 
+                      onClick={handleSaveChanges} 
+                      disabled={isSaving}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 shadow-md text-sm font-medium"
+                    >
+                      {isSaving ? "..." : <><Save size={16}/> Guardar</>}
+                    </button>
+                  </>
+                ) : (
+                  /* --- BOTONES MODO VISOR --- */
+                  <>
+                    <button 
+                      onClick={() => { setEditedContent(selectedResource.content); setIsEditing(true); }}
+                      className="flex items-center gap-2 px-4 py-2 border border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-medium"
+                    >
+                      <Edit3 size={16}/> Editar
+                    </button>
+                    <div className="w-px h-6 bg-gray-300 mx-2 self-center"></div>
+                    <button onClick={handlePrint} className="flex gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 shadow-md text-sm font-medium">
+                      <Download size={16}/> PDF
+                    </button>
+                    <button onClick={() => setSelectedResource(null)} className="p-2 text-gray-400 hover:text-gray-600"><X size={20}/></button>
+                  </>
+                )}
+              </div>
+            </div>
+            
+            {/* CONTENEDOR PRINCIPAL */}
+            <div className="preview-container w-full flex-1">
+              <div className="paper-a4">
+                 {isEditing ? (
+                   /* MODO EDITOR: React Quill */
+                   <ReactQuill 
+                     theme="snow"
+                     value={editedContent} 
+                     onChange={setEditedContent}
+                     className="h-full"
+                     modules={{
+                       toolbar: [
+                         [{ 'header': [1, 2, 3, false] }],
+                         ['bold', 'italic', 'underline'],
+                         [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                         ['clean'] // Botón para limpiar formato
+                       ],
+                     }}
+                   />
+                 ) : (
+                   /* MODO VISOR: Iframe */
+                   <iframe ref={iframeRef} className="preview-iframe" title="Visor"/>
+                 )}
+              </div>
+            </div>
+          </>
+        ) : (
+          <div className="flex flex-col items-center justify-center h-full text-gray-400">
+            <Search size={64} className="opacity-20 mb-4"/>
+            <p>Selecciona una ficha</p>
           </div>
         )}
       </div>
-
-      {selectedResource && (
-        <div className="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
-            <div className="p-4 border-b border-slate-100 flex justify-between items-center shrink-0">
-              <h2 className="font-bold text-slate-800 truncate">{selectedResource.title}</h2>
-              <div className="flex gap-2">
-                <Button onClick={handleDownloadPDF} disabled={isDownloading} className="bg-slate-700 text-white hover:bg-slate-800">
-                    {isDownloading ? 'Generando...' : <><Download className="w-4 h-4 mr-2" /> PDF</>}
-                </Button>
-                <Button variant="outline" onClick={handlePrint}><Printer className="w-4 h-4 mr-2" /> Imprimir</Button>
-                <button onClick={() => setSelectedResource(null)} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-6 h-6" /></button>
-              </div>
-            </div>
-            <div className="p-8 overflow-y-auto flex-1 bg-slate-100">
-               <div className="bg-white shadow-lg mx-auto max-w-[210mm] min-h-[297mm] p-[20mm] text-slate-900">
-                  <div className="ql-editor" dangerouslySetInnerHTML={{ __html: selectedResource.content }} />
-               </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
-// Forzando actualización de Vercel

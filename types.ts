@@ -26,18 +26,26 @@ export interface User {
   plan: UserPlan;
   generatedCount: number;
   role?: string;
+  
+  // --- NUEVOS CAMPOS PARA EL ONBOARDING ---
+  // Estos son necesarios para el Wizard de bienvenida
+  onboardingCompleted?: boolean; 
+  subjects?: string[];           
 }
 
-// --- AÑADIDO: Interfaz para los Recursos (Fichas) ---
 export interface Resource {
   id: string;
-  user_id: string;      // Vital para saber quién es el dueño
+  user_id: string;      
   title: string;
   content: string;
   created_at: string;
   type: string;
-  is_public?: boolean;  // Nuevo: Para la Galería Pública
-  description?: string; // Nuevo: Opcional
+  is_public?: boolean;  
+  description?: string; 
+  
+  // Añadimos estos opcionales para que la biblioteca no se queje
+  subject?: string;
+  level?: string;
 }
 
 export interface WorksheetResponse {

@@ -1,193 +1,239 @@
 import React, { useEffect, useState } from 'react';
-import { User, Resource } from '../types';
-import { Button } from '../components/Button';
-import { PLAN_LIMITS, MOCK_RESOURCES } from '../constants';
-import { supabase } from '../services/supabaseClient';
 import { 
-  Sparkles, FileText, Zap, Clock, Plus, Crown, ArrowRight, Lock, AlertCircle 
+  Plus, Zap, FileText, Crown, ArrowRight, 
+  Brain, Sparkles, Clock, TrendingUp, AlertCircle 
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { User } from '../types';
+
+// MASCOTA
+const BrainMascot = () => (
+  <div className="relative group cursor-pointer">
+    <div className="absolute -inset-2 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition duration-300"></div>
+    <div className="relative w-16 h-16 bg-gradient-to-br from-white to-blue-50 rounded-2xl flex items-center justify-center shadow-xl border border-blue-100 overflow-hidden">
+      <Sparkles className="absolute top-2 right-2 w-4 h-4 text-yellow-400 animate-pulse z-10" />
+      <Brain className="w-9 h-9 text-blue-600 z-10 relative" />
+    </div>
+  </div>
+);
 
 interface DashboardProps {
-  user: User;
+  user: User | null;
   onNavigate: (page: string) => void;
-  onRequireAuth?: () => void;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate, onRequireAuth }) => {
-  const [loading, setLoading] = useState(true);
+export const Dashboard: React.FC<DashboardProps> = ({ user, onNavigate }) => {
   const [stats, setStats] = useState({
-    totalResources: 0,
-    recentActivity: [] as Resource[]
+    savedResources: 0,
+    recentActivity: [] as any[]
   });
+  const [loading, setLoading] = useState(true);
 
-  const isGuest = user.id === 'guest';
-  const limits = PLAN_LIMITS[user.plan];
-  const usagePercentage = isGuest ? 65 : Math.min((user.generatedCount / limits.maxGenerations) * 100, 100);
+  // --- REGLAS DE NEGOCIO ---
+  const isPremium = user?.plan === 'premium';
+  // AQUÍ ESTABA EL CAMBIO: Ponemos 3 en lugar de 10
+  const maxGenerations = isPremium ? 1000 : 3; 
+  const currentGenerations = user?.generatedCount || 0;
+  
+  // Porcentaje de uso
+  const usagePercentage = Math.min((currentGenerations / maxGenerations) * 100, 100);
+  const isLimitReached = !isPremium && currentGenerations >= maxGenerations;
 
-  const handleProtectedAction = (destination: string) => {
-    if (isGuest && onRequireAuth) {
-      onRequireAuth();
-    } else {
-      onNavigate(destination);
+  useEffect(() => {
+    if (user) {
+      loadDashboardData();
+    }
+  }, [user]);
+
+  const loadDashboardData = async () => {
+    try {
+      if (!user) return;
+
+      const { count: savedCount } = await supabase
+        .from('resources')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id); 
+
+      const { data: recent } = await supabase
+        .from('resources')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(4)
+        .eq('user_id', user.id);
+
+      setStats({
+        savedResources: savedCount || 0,
+        recentActivity: recent || []
+      });
+    } catch (error) {
+      console.error("Error cargando dashboard:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    async function fetchDashboardData() {
-      if (isGuest) {
-        setStats({
-          totalResources: 12, 
-          recentActivity: MOCK_RESOURCES.slice(0, 3)
-        });
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const { count } = await supabase
-          .from('resources')
-          .select('*', { count: 'exact', head: true })
-          .eq('user_id', user.id);
-
-        const { data: recent } = await supabase
-          .from('resources')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(3);
-
-        setStats({
-          totalResources: count || 0,
-          recentActivity: recent || []
-        });
-      } catch (error) {
-        console.error("Error dashboard:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchDashboardData();
-  }, [user.id, isGuest]);
+  const getSubjectColor = (subject: string) => {
+    const s = subject?.toLowerCase() || "";
+    if (s.includes('mat')) return 'bg-blue-100 text-blue-600';
+    if (s.includes('len')) return 'bg-red-100 text-red-600';
+    if (s.includes('ing')) return 'bg-purple-100 text-purple-600';
+    if (s.includes('cie')) return 'bg-green-100 text-green-600';
+    return 'bg-gray-100 text-gray-600';
+  };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-10">
-      
-      {/* --- NUEVO: BANNER DE AVISO PARA INVITADOS --- */}
-      {isGuest && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 flex items-center gap-3 text-yellow-800 animate-fade-in">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <p className="text-sm font-medium">
-            Estás navegando como invitado. <button onClick={onRequireAuth} className="underline font-bold hover:text-yellow-900">Inicia sesión</button> para guardar tus fichas y eliminar los límites.
-          </p>
-        </div>
-      )}
+    <div className="p-8 max-w-7xl mx-auto space-y-8 font-sans">
       
       {/* HEADER */}
-      <div className="relative bg-slate-900 rounded-3xl p-8 md:p-10 shadow-2xl overflow-hidden text-white">
-        <div className="absolute top-0 right-0 opacity-10 transform translate-x-10 -translate-y-10">
-          <Sparkles className="w-64 h-64 text-brand-400" />
-        </div>
+      <div className="bg-slate-900 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20"></div>
+        <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20"></div>
         
-        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="flex items-center gap-6 z-10">
+          <BrainMascot />
           <div>
-            <h1 className="text-3xl md:text-4xl font-extrabold mb-2 tracking-tight">
-              {isGuest ? 'Bienvenido a EduGenius' : `Hola, ${user.name.split(' ')[0]}`} <span className="inline-block animate-wave">👋</span>
+            <h1 className="text-3xl font-bold flex items-center gap-2">
+              Hola, {user?.name || "Profe"} <span className="animate-wave inline-block origin-bottom-right">👋</span>
             </h1>
-            <p className="text-slate-400 text-lg max-w-xl">
-              {isGuest 
-                ? "Explora lo que nuestra IA puede hacer por ti. Abajo verás ejemplos reales de fichas generadas." 
-                : "Tu asistente inteligente está listo. ¿Qué creamos hoy?"}
+            <p className="text-slate-300 mt-2 text-lg max-w-xl leading-relaxed">
+              Soy tu <span className="text-blue-400 font-bold">asistente inteligente</span>. Dime qué necesitas enseñar hoy y prepararé tus materiales al instante.
             </p>
           </div>
-          <Button 
-            onClick={() => handleProtectedAction('generator')}
-            className="bg-brand-500 hover:bg-brand-400 text-white border-0 py-3 px-6 text-lg shadow-lg"
-          >
-            {isGuest ? <Lock className="w-4 h-4 mr-2" /> : <Plus className="w-5 h-5 mr-2" />}
-            {isGuest ? "Probar Generador" : "Crear Nueva Ficha"}
-          </Button>
         </div>
+
+        {/* Botón de acción (Deshabilitado si alcanzó el límite gratuito) */}
+        <button 
+          onClick={() => isLimitReached ? onNavigate('pricing') : onNavigate('generator')}
+          className={`z-10 px-6 py-3 rounded-xl font-bold shadow-lg transition-all flex items-center gap-2 transform hover:scale-105 ${
+            isLimitReached 
+              ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-900/50' 
+              : 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-900/50'
+          }`}
+        >
+          {isLimitReached ? <Crown size={20} /> : <Plus size={20} />}
+          {isLimitReached ? "Mejorar Plan" : "Crear Nueva Ficha"}
+        </button>
       </div>
 
-      {/* CARDS */}
+      {/* GRID DE ESTADÍSTICAS */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        
+        {/* TARJETA GENERACIONES (Límite 3) */}
+        <div className={`p-6 rounded-2xl shadow-sm border flex flex-col justify-between hover:shadow-md transition-shadow ${
+            isLimitReached ? 'bg-red-50 border-red-100' : 'bg-white border-slate-100'
+          }`}>
           <div className="flex justify-between items-start mb-4">
             <div>
-              {/* CAMBIO DE TEXTO AQUÍ */}
-              <p className="text-slate-500 text-sm font-semibold uppercase">{isGuest ? 'Potencia IA' : 'Generaciones'}</p>
-              <h3 className="text-3xl font-bold text-slate-900 mt-2">
-                {isGuest ? "Demo" : user.generatedCount} <span className="text-lg text-slate-400">{!isGuest && `/ ${limits.maxGenerations}`}</span>
+              <p className={`text-sm font-bold uppercase tracking-wider ${isLimitReached ? 'text-red-400' : 'text-slate-400'}`}>
+                Generaciones IA
+              </p>
+              <h3 className="text-3xl font-bold text-slate-800 mt-1">
+                {currentGenerations} <span className="text-lg text-slate-400 font-normal">/ {maxGenerations}</span>
               </h3>
             </div>
-            <div className="p-3 rounded-xl bg-orange-100 text-orange-600"><Zap className="w-6 h-6" /></div>
+            <div className={`p-3 rounded-xl ${isLimitReached ? 'bg-red-200 text-red-600' : 'bg-blue-50 text-blue-500'}`}>
+              {isLimitReached ? <AlertCircle size={24} /> : <Zap size={24} />}
+            </div>
           </div>
-          <div className="w-full bg-slate-100 rounded-full h-3 mb-3">
-            <div className="h-3 rounded-full bg-brand-600" style={{ width: `${usagePercentage}%` }}></div>
+          
+          <div className="w-full bg-slate-200 rounded-full h-3 overflow-hidden">
+            <div 
+              className={`h-full rounded-full transition-all duration-1000 ease-out ${isLimitReached ? 'bg-red-500' : 'bg-blue-500'}`}
+              style={{ width: `${usagePercentage}%` }}
+            ></div>
           </div>
-          {isGuest && <p className="text-xs text-slate-400">Capacidad disponible en versión gratuita.</p>}
+          
+          <p className={`text-xs mt-3 ${isLimitReached ? 'text-red-500 font-bold' : 'text-slate-400'}`}>
+            {isLimitReached ? "Has alcanzado el límite mensual." : "Se renuevan el 1 de cada mes"}
+          </p>
         </div>
 
-        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-          <div className="flex justify-between items-start mb-4">
+        {/* BIBLIOTECA */}
+        <div 
+          onClick={() => onNavigate('library')}
+          className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between hover:shadow-md transition-shadow group cursor-pointer"
+        >
+          <div className="flex justify-between items-start">
             <div>
-              {/* CAMBIO DE TEXTO AQUÍ */}
-              <p className="text-slate-500 text-sm font-semibold uppercase">{isGuest ? 'Ejemplos Disponibles' : 'Recursos Guardados'}</p>
-              <h3 className="text-3xl font-bold text-slate-900 mt-2">{stats.totalResources}</h3>
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Biblioteca</p>
+              <h3 className="text-3xl font-bold text-slate-800 mt-1">{stats.savedResources}</h3>
+              <p className="text-sm text-slate-500 mt-1">Fichas guardadas</p>
             </div>
-            <div className="p-3 rounded-xl bg-blue-100 text-blue-600"><FileText className="w-6 h-6" /></div>
+            <div className="p-3 bg-indigo-50 rounded-xl text-indigo-500 group-hover:bg-indigo-600 group-hover:text-white transition-colors"><FileText size={24} /></div>
           </div>
-          <button 
-            onClick={() => handleProtectedAction('resources')}
-            className="text-brand-600 font-medium text-sm flex items-center mt-4 group"
-          >
-            {isGuest ? 'Ver ejemplos' : 'Ver biblioteca'} <ArrowRight className="w-4 h-4 ml-1" />
-          </button>
+          <div className="mt-4 text-indigo-600 font-bold text-sm flex items-center gap-1 group-hover:gap-2 transition-all">
+            Ver mi colección <ArrowRight size={16} />
+          </div>
         </div>
 
-        <div className="bg-slate-900 p-6 rounded-2xl border border-slate-800 text-white">
-          <div className="flex justify-between items-start mb-4">
+        {/* PLAN */}
+        <div className="bg-slate-900 p-6 rounded-2xl shadow-lg flex flex-col justify-between relative overflow-hidden text-white group">
+          <Brain className="absolute -bottom-10 -right-10 w-48 h-48 text-slate-800 opacity-20 rotate-12" />
+          
+          <div className="flex justify-between items-start z-10">
             <div>
-              <p className="text-slate-400 text-sm font-semibold uppercase">Tu Plan</p>
-              <h3 className="text-3xl font-bold mt-2 capitalize">{user.plan}</h3>
+              <p className="text-sm font-bold text-slate-400 uppercase tracking-wider">Tu Plan</p>
+              <h3 className="text-2xl font-bold mt-1 flex items-center gap-2 capitalize">
+                {isPremium ? "Premium" : "Gratuito"} 
+                {isPremium && <Crown size={20} className="text-yellow-400 fill-yellow-400" />}
+              </h3>
             </div>
-            <Crown className="w-6 h-6 text-yellow-400" />
+            <div className="p-2 bg-slate-800 rounded-lg border border-slate-700"><Sparkles size={20} className="text-yellow-400" /></div>
           </div>
-          <Button 
-            className="w-full mt-2 bg-white text-slate-900 border-0"
-            onClick={() => handleProtectedAction('pricing')}
-          >
-            {isGuest ? "Crear Cuenta Gratis" : "Mejorar Plan"}
-          </Button>
+          
+          <div className="mt-6 space-y-3 z-10">
+            {isPremium ? (
+              <div className="flex items-center justify-between text-sm text-slate-300">
+                <span className="flex items-center gap-2"><Clock size={14}/> Renovación:</span>
+                <span className="font-medium text-white">12 Mar 2026</span>
+              </div>
+            ) : (
+              <p className="text-sm text-slate-300">Pásate a Premium para generaciones ilimitadas.</p>
+            )}
+
+            <div onClick={() => onNavigate('pricing')} className="w-full bg-slate-800 rounded-lg p-2 text-center text-xs text-yellow-400 font-bold border border-slate-700 cursor-pointer hover:bg-slate-700 transition-colors">
+              {isPremium ? "Gestionar Suscripción" : "Mejorar Plan ⚡"}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* ACTIVITY */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden relative">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-          <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-slate-400" />
-            {isGuest ? "Ejemplos de lo que puedes crear" : "Actividad Reciente"}
-          </h2>
+      {/* ACTIVIDAD RECIENTE */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-50 flex items-center gap-3">
+          <div className="p-2 bg-gray-100 rounded-lg text-gray-600"><TrendingUp size={20} /></div>
+          <h3 className="font-bold text-lg text-slate-800">Actividad Reciente</h3>
         </div>
-
-        <div className="divide-y divide-slate-100">
-          {stats.recentActivity.map((resource) => (
-            <div 
-              key={resource.id} 
-              className="p-4 sm:p-6 flex items-center gap-4 hover:bg-slate-50 transition-colors cursor-pointer group"
-              onClick={() => handleProtectedAction('resources')}
-            >
-              <div className="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center text-brand-600 group-hover:bg-brand-100 transition-colors">
-                {isGuest ? <Lock className="w-5 h-5 opacity-50" /> : <FileText className="w-6 h-6" />}
+        
+        <div className="divide-y divide-slate-50">
+          {loading ? <div className="p-8 text-center text-slate-400">Cargando...</div> : 
+           stats.recentActivity.length === 0 ? (
+             <div className="p-10 text-center flex flex-col items-center">
+               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-3"><FileText className="text-slate-300" /></div>
+               <p className="text-slate-500">Aún no has creado ninguna ficha.</p>
+               <button onClick={() => onNavigate('generator')} className="text-blue-600 font-bold mt-2 hover:underline">¡Crea la primera!</button>
+             </div>
+          ) : (
+            stats.recentActivity.map((resource) => (
+              <div key={resource.id} className="p-4 hover:bg-slate-50 transition-colors flex items-center justify-between group cursor-pointer">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${getSubjectColor(resource.subject)}`}><FileText size={18} /></div>
+                  <div>
+                    <h4 className="font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{resource.title}</h4>
+                    <p className="text-xs text-slate-500 flex items-center gap-2">
+                      {resource.subject && <span className="uppercase font-bold">{resource.subject}</span>}
+                      <span className="mx-1">•</span>
+                      {new Date(resource.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                   {resource.level && <span className="text-xs font-bold px-2 py-1 bg-gray-100 text-gray-600 rounded uppercase">{resource.level}</span>}
+                   <ArrowRight size={16} className="text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition-all" />
+                </div>
               </div>
-              <div className="flex-1">
-                <h4 className="text-sm font-bold text-slate-900">{resource.title}</h4>
-                <p className="text-xs text-slate-500 mt-0.5">{resource.subject} • {resource.level}</p>
-              </div>
-              {isGuest && <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded border border-slate-200">DEMO</span>}
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

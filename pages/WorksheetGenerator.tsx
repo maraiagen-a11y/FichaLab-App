@@ -1,222 +1,280 @@
-import React, { useState } from 'react';
-import ReactQuill from 'react-quill-new';
-import 'react-quill-new/dist/quill.snow.css'; 
-import { generateWorksheet } from '../services/geminiService';
-import { supabase } from '../services/supabaseClient';
-import { EducationLevel, Subject, User, UserPlan } from '../types';
-import { Button } from '../components/Button';
-import { PLAN_LIMITS } from '../constants';
-import { Sparkles, Printer, Save, LayoutTemplate, RefreshCw, FileText, Download } from 'lucide-react';
+import React, { useState, useRef, useEffect } from "react";
+import { generateWorksheet } from "../services/geminiService";
+import { Subject, EducationLevel, User } from "../types"; // Importamos User
+import './worksheet-preview.css'; 
 
-// @ts-ignore
-import html2pdf from 'html2pdf.js';
+import { supabase } from "../lib/supabase"; 
 
-interface WorksheetGeneratorProps { user: User; onWorksheetGenerated: () => void; }
+import { 
+  Download, FileText, Copy, RefreshCw, Settings, Save, Crown, AlertCircle 
+} from "lucide-react"; 
+
+// DEFINIMOS LAS PROPS QUE VIENEN DE APP.TSX
+interface WorksheetGeneratorProps {
+  user: User | null;
+  onWorksheetGenerated: () => void;
+}
 
 export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, onWorksheetGenerated }) => {
+  // --- ESTADOS ---
+  const [subject, setSubject] = useState<Subject>(Object.values(Subject)[0] as Subject);
+  const [level, setLevel] = useState<EducationLevel>(Object.values(EducationLevel)[0] as EducationLevel);
+  const [topic, setTopic] = useState("");
+  const [exerciseCount, setExerciseCount] = useState(5);
+  const [instructions, setInstructions] = useState("");
+  
+  const [worksheetContent, setWorksheetContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  
-  const [subject, setSubject] = useState<Subject>(Subject.MATH);
-  const [level, setLevel] = useState<EducationLevel>(EducationLevel.PRIMARY);
-  const [topic, setTopic] = useState('');
-  const [count, setCount] = useState(5);
-  const [instructions, setInstructions] = useState('');
-  const [editableContent, setEditableContent] = useState<string>(''); 
+  const [error, setError] = useState<string>("");
 
-  const limits = PLAN_LIMITS[user.plan];
-  const canGenerate = user.plan === UserPlan.PREMIUM || user.generatedCount < limits.maxGenerations;
+  // REFERENCIA AL IFRAME
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  const handleGenerate = async () => {
-    if (!canGenerate) return;
-    if (!topic.trim()) { setError("Introduce un tema."); return; }
-    setIsLoading(true); setError(null); setEditableContent(''); 
+  // --- CALCULAMOS LÍMITES ---
+  const isPremium = user?.plan === 'premium';
+  const limit = isPremium ? 1000 : 3; // Límite de 3 para cuentas gratuitas
+  const currentCount = user?.generatedCount || 0;
+  const isLimitReached = !isPremium && currentCount >= limit;
 
-    try {
-      const response = await generateWorksheet({ subject, level, topic, exerciseCount: count, instructions });
-      setEditableContent(response.content);
-      if (user.id !== 'guest') {
-        const { error: err } = await supabase.from('profiles').update({ generated_count: user.generatedCount + 1 }).eq('id', user.id);
-        if (!err) onWorksheetGenerated(); 
+  // --- EFECTO: INYECTAR HTML ---
+  useEffect(() => {
+    if (worksheetContent && iframeRef.current) {
+      const doc = iframeRef.current.contentWindow?.document;
+      if (doc) {
+        doc.open();
+        doc.write(worksheetContent);
+        doc.close();
       }
-    } catch (err) { console.error(err); setError("Error con la IA."); } finally { setIsLoading(false); }
-  };
+    }
+  }, [worksheetContent]);
 
-  const handleSave = async () => {
-    if (!editableContent || user.id === 'guest') return;
-    setIsSaving(true);
+  // --- 1. GENERAR (CON LÓGICA DE CONTADOR) ---
+  const handleGenerate = async () => {
+    // 1.1 Verificaciones previas
+    if (!topic.trim()) { setError("Por favor, escribe un tema."); return; }
+    
+    // 1.2 Bloqueo por límite
+    if (isLimitReached && user?.id !== 'guest') {
+      alert(`Has alcanzado tu límite gratuito de ${limit} fichas. ¡Pásate a Premium!`);
+      return;
+    }
+
+    setIsLoading(true); setError(""); setWorksheetContent("");
+
     try {
-      const { error: err } = await supabase.from('resources').insert([{ user_id: user.id, title: `${subject}: ${topic} (${level})`, content: editableContent, type: 'worksheet' }]);
-      if (err) throw err;
-      alert('¡Guardada en Biblioteca!');
-    } catch (err) { alert('Error al guardar.'); } finally { setIsSaving(false); }
+      // 2. Llamada a la IA
+      const result = await generateWorksheet({ subject, level, topic, exerciseCount, instructions });
+      setWorksheetContent(result.content);
+
+      // 3. ACTUALIZAR CONTADOR (Solo si no es invitado)
+      if (user && user.id !== 'guest') {
+        const newCount = currentCount + 1;
+        
+        // A) Actualizamos en Supabase
+        const { error: updateError } = await supabase
+          .from('profiles')
+          .update({ generated_count: newCount })
+          .eq('id', user.id);
+
+        if (updateError) console.error("Error actualizando contador:", updateError);
+
+        // B) Avisamos a App.tsx para que refresque el Dashboard
+        onWorksheetGenerated();
+      }
+
+    } catch (err: any) {
+      setError(err.message || "Error al generar.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  // --- FUNCIÓN DESCARGA PDF (ESTRATEGIA VISIBLE/FANTASMA) ---
-  const handleDownloadPDF = () => {
-    if (!editableContent) return;
-    setIsDownloading(true);
+  // --- 2. GUARDAR EN BIBLIOTECA ---
+  const handleSave = async () => {
+    if (!worksheetContent) return;
+    if (!user || user.id === 'guest') {
+      alert("Debes iniciar sesión para guardar.");
+      return;
+    }
 
-    // 1. Crear contenedor temporal VISIBLE
-    const container = document.createElement('div');
-    container.id = 'pdf-generator-temp';
+    setIsSaving(true);
     
-    // Estilos para superponerlo (Overlay blanco)
-    container.style.position = 'fixed';
-    container.style.top = '0';
-    container.style.left = '0';
-    container.style.width = '100%';
-    container.style.height = '100%';
-    container.style.zIndex = '99999';
-    container.style.backgroundColor = 'white';
-    container.style.overflowY = 'scroll';
-    
-    // Contenedor A4 interno
-    const a4Page = document.createElement('div');
-    a4Page.className = 'ql-editor';
-    a4Page.innerHTML = editableContent; // Copiamos el contenido del editor
-    
-    // Estilos A4
-    a4Page.style.width = '210mm';
-    a4Page.style.minHeight = '297mm';
-    a4Page.style.padding = '20mm';
-    a4Page.style.margin = '0 auto';
-    a4Page.style.backgroundColor = 'white';
+    try {
+      const { error } = await supabase.from('resources').insert([
+        {
+          title: topic,
+          subject: subject,
+          level: level,
+          content: worksheetContent,
+          type: 'worksheet',
+          user_id: user.id 
+        }
+      ]);
 
-    // Inyectamos estilos
-    const style = document.createElement('style');
-    style.innerHTML = `
-      #pdf-generator-temp .ql-editor h1 { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; font-size: 2em; color: black; }
-      #pdf-generator-temp .ql-editor h2 { margin-top: 30px; margin-bottom: 15px; color: #334155; font-size: 1.5em; }
-      #pdf-generator-temp .ql-editor li { margin-bottom: 1.5cm; }
-      #pdf-generator-temp .ql-editor { font-family: sans-serif; font-size: 16px; line-height: 1.6; }
-    `;
-    
-    container.appendChild(style);
-    container.appendChild(a4Page);
-    document.body.appendChild(container);
-
-    const opt = {
-      margin:       0, 
-      filename:     `Ficha_${topic || 'EduGenius'}.pdf`,
-      image:        { type: 'jpeg', quality: 0.98 },
-      html2canvas:  { scale: 2, useCORS: true, scrollY: 0 }, 
-      jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak:    { mode: 'css' }
-    };
-
-    setTimeout(() => {
-        html2pdf().set(opt).from(a4Page).save().then(() => {
-            document.body.removeChild(container);
-            setIsDownloading(false);
-        });
-    }, 500);
+      if (error) throw error;
+      
+      alert("✅ ¡Ficha guardada correctamente en tu biblioteca!");
+      // Refrescamos también por si quieres que aparezca en "Actividad reciente"
+      onWorksheetGenerated(); 
+      
+    } catch (err: any) {
+      console.error("Error al guardar:", err);
+      alert("❌ Error al guardar: " + (err.message || "Revisa la consola"));
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // --- IMPRESIÓN PRO (IFRAME) ---
-  const handlePrint = () => {
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'fixed'; iframe.style.right = '0'; iframe.style.bottom = '0'; iframe.style.width = '0'; iframe.style.height = '0'; iframe.style.border = '0';
-    document.body.appendChild(iframe);
-    const doc = iframe.contentWindow?.document;
-    if (!doc) return;
-    doc.open();
-    doc.write(`
-      <html>
-        <head>
-          <title>${topic || 'Ficha'}</title>
-          <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
-          <style>
-            @page { margin: 20mm; size: auto; }
-            body { margin: 0; padding: 20mm; font-family: sans-serif; -webkit-print-color-adjust: exact; }
-            .ql-container.ql-snow { border: none !important; }
-            .ql-editor { padding: 0 !important; overflow: visible !important; }
-            li { margin-bottom: 1.5cm; } 
-            h1 { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; } 
-            h2 { margin-top: 30px; margin-bottom: 15px; }
-          </style>
-        </head>
-        <body>
-          <div class="ql-container ql-snow"><div class="ql-editor">${editableContent}</div></div>
-          <script>
-            window.onload = function() { setTimeout(function() { window.focus(); window.print(); }, 500); };
-          </script>
-        </body>
-      </html>
-    `);
-    doc.close();
-    setTimeout(() => { document.body.removeChild(iframe); }, 2000);
+  // --- 3. IMPRIMIR / PDF ---
+  const handlePrintOrPDF = () => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.focus();
+      iframeRef.current.contentWindow.print();
+    }
   };
 
-  const modules = {
-    toolbar: [ [{ 'header': [1, 2, 3, false] }], ['bold', 'italic', 'underline'], [{ 'list': 'ordered'}, { 'list': 'bullet' }], ['clean'] ],
+  // --- 4. COPIAR HTML ---
+  const handleCopyHTML = () => {
+    navigator.clipboard.writeText(worksheetContent)
+      .then(() => alert("Código HTML copiado al portapapeles"));
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-80px)] bg-slate-100 overflow-hidden font-sans print:h-auto print:overflow-visible print:bg-white">
+    <div className="flex h-screen bg-gray-50 font-sans overflow-hidden">
       
-      <style>{`
-        .ql-container { font-family: inherit; font-size: 16px; border: none !important; }
-        .ql-editor { min-height: 250mm; padding: 20mm; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.1); line-height: 1.6; }
-        .ql-editor li { margin-bottom: 1.5cm !important; padding-left: 0.5rem; }
-        .ql-editor h1 { font-size: 2em; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        .ql-editor h2 { font-size: 1.5em; margin-top: 30px; margin-bottom: 15px; color: #334155; }
-        .ql-toolbar { background: #f8fafc; border-bottom: 1px solid #e2e8f0 !important; border-top: none !important; border-radius: 8px 8px 0 0; }
-        
-        @media print {
-          @page { margin: 15mm; size: auto; }
-          body { background: white; height: auto; overflow: visible; }
-          nav, aside, .no-print, .ql-toolbar { display: none !important; }
-          .ql-editor { box-shadow: none; padding: 0; width: 100% !important; }
-          .ql-editor li { margin-bottom: 1.5cm !important; }
-          .print-container { position: absolute; top: 0; left: 0; width: 100%; margin: 0; padding: 0; }
-          .flex-1 { overflow: visible !important; display: block !important; }
-        }
-      `}</style>
+      {/* === PANEL IZQUIERDO: CONFIGURACIÓN === */}
+      <div className="w-[400px] bg-white border-r border-gray-200 flex flex-col z-10 shadow-xl print:hidden">
+        <div className="p-6 border-b border-gray-100">
+          <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <Settings className="text-blue-600" /> Configuración
+          </h2>
+          {/* Muestra de Créditos */}
+          {user && user.id !== 'guest' && (
+             <div className={`mt-2 text-xs font-bold px-2 py-1 rounded inline-flex items-center gap-1 ${isLimitReached ? 'bg-red-100 text-red-600' : 'bg-blue-50 text-blue-600'}`}>
+               {isLimitReached ? <AlertCircle size={12}/> : <Crown size={12}/>}
+               Generaciones: {currentCount} / {limit}
+             </div>
+          )}
+        </div>
 
-      {/* PANEL IZQUIERDO */}
-      <div className="w-full lg:w-[400px] bg-white border-r border-slate-200 flex flex-col h-full z-10 print:hidden no-print">
-        <div className="p-6 border-b border-slate-100"><h2 className="text-xl font-bold text-slate-800 flex items-center gap-2"><LayoutTemplate className="w-5 h-5 text-brand-600"/> Configuración</h2></div>
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div><label className="text-xs font-bold text-slate-500">Asignatura</label><select className="w-full border-slate-200 rounded-lg text-sm py-2" value={subject} onChange={(e) => setSubject(e.target.value as Subject)}>{Object.values(Subject).map(s => <option key={s} value={s}>{s}</option>)}</select></div>
-            <div><label className="text-xs font-bold text-slate-500">Nivel</label><select className="w-full border-slate-200 rounded-lg text-sm py-2" value={level} onChange={(e) => setLevel(e.target.value as EducationLevel)}>{Object.values(EducationLevel).map(l => <option key={l} value={l}>{l}</option>)}</select></div>
+        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          {/* Asignatura */}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Asignatura</label>
+            <select value={subject} onChange={(e) => setSubject(e.target.value as Subject)} className="w-full p-2 border border-gray-300 rounded-lg outline-none">
+              {Object.values(Subject).map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
           </div>
-          <div><label className="text-xs font-bold text-slate-500">Tema</label><input type="text" className="w-full border-slate-200 rounded-lg text-sm py-2" placeholder="Ej: Logaritmos..." value={topic} onChange={(e) => setTopic(e.target.value)}/></div>
-          <div><div className="flex justify-between mb-2"><label className="text-xs font-bold text-slate-500">Ejercicios: {count}</label></div><input type="range" min="1" max="20" className="w-full h-2 bg-slate-100 rounded-lg accent-brand-600" value={count} onChange={(e) => setCount(parseInt(e.target.value))}/></div>
-          <div><label className="text-xs font-bold text-slate-500">Instrucciones</label><textarea className="w-full border-slate-200 rounded-lg text-sm py-2" rows={3} placeholder="Ej: Solo ejercicios, sin teoría..." value={instructions} onChange={(e) => setInstructions(e.target.value)}/></div>
-          <div className="pt-4"><Button onClick={handleGenerate} isLoading={isLoading} disabled={!canGenerate || !topic} className="w-full py-3 bg-brand-600 shadow-lg"><Sparkles className="w-4 h-4 mr-2"/> {editableContent ? 'Regenerar' : 'Generar'}</Button></div>
+
+          {/* Nivel */}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Nivel</label>
+            <select value={level} onChange={(e) => setLevel(e.target.value as EducationLevel)} className="w-full p-2 border border-gray-300 rounded-lg outline-none">
+              {Object.values(EducationLevel).map(l => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </div>
+
+          {/* Tema */}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Tema Principal</label>
+            <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ej: Ecuaciones de segundo grado" className="w-full p-2 border border-gray-300 rounded-lg outline-none"/>
+          </div>
+
+          {/* Slider */}
+          <div>
+            <div className="flex justify-between text-xs font-bold text-gray-500 uppercase mb-1">
+              <span>Cantidad: {exerciseCount}</span>
+            </div>
+            <input type="range" min="1" max="15" value={exerciseCount} onChange={(e) => setExerciseCount(Number(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg cursor-pointer"/>
+          </div>
+
+          {/* Instrucciones */}
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Instrucciones Extra</label>
+            <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={3} placeholder="Ej: Sin soluciones..." className="w-full p-2 border border-gray-300 rounded-lg outline-none resize-none"/>
+          </div>
+
+          {/* Botón Generar */}
+          <button 
+            onClick={handleGenerate} 
+            disabled={isLoading || !topic || isLimitReached} 
+            className={`w-full py-3 text-white rounded-lg font-bold shadow-lg transition-all flex justify-center items-center gap-2 ${
+              isLimitReached 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            {isLoading ? (
+              <><div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full"/> Creando...</>
+            ) : isLimitReached ? (
+              <><Crown size={20} /> Límite Alcanzado</>
+            ) : (
+              <><RefreshCw size={20} /> Generar Ficha</>
+            )}
+          </button>
+          
+          {error && <p className="text-sm text-red-500 bg-red-50 p-2 rounded border border-red-100">{error}</p>}
         </div>
       </div>
 
-      {/* PANEL DERECHO */}
-      <div className="flex-1 flex flex-col h-full bg-slate-200 overflow-hidden relative print:bg-white print:overflow-visible print:h-auto print:block">
-        {editableContent && (
-          <div className="h-16 border-b border-slate-300 bg-white px-6 flex items-center justify-between shrink-0 print:hidden z-20 no-print">
-            <div className="flex items-center gap-2 text-sm font-medium text-slate-600"><FileText className="w-4 h-4 text-brand-600"/> Editor</div>
+      {/* === PANEL DERECHO: VISOR === */}
+      <div className="flex-1 flex flex-col h-full relative bg-gray-800">
+        
+        {/* Barra superior */}
+        {worksheetContent && (
+          <div className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm z-20 print:hidden shrink-0">
+            <div className="flex items-center gap-2 text-gray-600 font-medium">
+              <FileText className="text-blue-600" size={20} /> Vista Previa
+            </div>
             <div className="flex gap-2">
-               {/* BOTÓN DESCARGA PDF */}
-               <Button size="sm" onClick={handleDownloadPDF} disabled={isDownloading} className="bg-slate-700 text-white">
-                  {isDownloading ? '...' : <><Download className="w-4 h-4 mr-2" /> PDF</>}
-               </Button>
+              <button onClick={handleCopyHTML} className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg" title="Copiar HTML"><Copy size={20} /></button>
+              
+              <div className="w-px h-6 bg-gray-300 mx-2 self-center"></div>
+              
+              {/* BOTÓN GUARDAR */}
+              <button 
+                onClick={handleSave} 
+                disabled={isSaving}
+                className="flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg font-medium transition-colors"
+              >
+                {isSaving ? "Guardando..." : <><Save size={18} /> Guardar</>}
+              </button>
 
-               <Button variant="outline" size="sm" onClick={handleGenerate}><RefreshCw className="w-4 h-4"/></Button>
-               <Button size="sm" onClick={handlePrint} className="bg-slate-800 text-white"><Printer className="w-4 h-4 mr-2"/> Imprimir</Button>
-               {user.id !== 'guest' && <Button size="sm" onClick={handleSave} isLoading={isSaving} className="bg-green-600 text-white"><Save className="w-4 h-4 mr-2"/> Guardar</Button>}
+              {/* BOTÓN IMPRIMIR */}
+              <button onClick={handlePrintOrPDF} className="flex items-center gap-2 px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 font-medium shadow-md transition-colors">
+                <Download size={18} /> Descargar PDF
+              </button>
             </div>
           </div>
         )}
-        <div className="flex-1 overflow-y-auto p-8 print:p-0 print:overflow-visible print:h-auto print-container">
-          <div className="max-w-[210mm] mx-auto print:w-full print:max-w-none">
-            {!editableContent && !isLoading && <div className="min-h-[297mm] bg-white shadow-xl flex items-center justify-center text-slate-300 rounded-sm print:hidden"><LayoutTemplate className="w-20 h-20 opacity-20"/></div>}
-            {isLoading && <div className="min-h-[297mm] bg-white shadow-xl flex items-center justify-center text-slate-300 rounded-sm print:hidden"><div className="animate-spin w-12 h-12 border-4 border-brand-600 border-t-transparent rounded-full"></div></div>}
-            {editableContent && !isLoading && <div className="bg-white shadow-2xl print:shadow-none"><ReactQuill theme="snow" value={editableContent} onChange={setEditableContent} modules={modules}/></div>}
-            <div className="h-20 print:hidden"></div>
+
+        {/* Contenedor Mesa */}
+        <div className="preview-container">
+          {!worksheetContent && !isLoading && (
+            <div className="flex flex-col items-center justify-center text-gray-400 mt-20">
+              <FileText size={64} className="mb-4 opacity-20" />
+              <p className="text-xl font-medium">Tu ficha aparecerá aquí</p>
+            </div>
+          )}
+
+          {isLoading && (
+            <div className="flex flex-col items-center justify-center mt-32">
+              <div className="animate-spin h-12 w-12 border-4 border-blue-600 border-t-transparent rounded-full mb-6"></div>
+              <p className="text-white font-medium animate-pulse">Diseñando...</p>
+            </div>
+          )}
+
+          {/* FOLIO A4 */}
+          <div className={`paper-a4 ${!worksheetContent && !isLoading ? 'hidden' : ''}`}>
+             <iframe 
+               ref={iframeRef}
+               className="preview-iframe"
+               title="Vista Previa Ficha"
+             />
           </div>
         </div>
       </div>
     </div>
   );
-};
+}
