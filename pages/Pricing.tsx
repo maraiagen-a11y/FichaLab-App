@@ -8,7 +8,7 @@ interface PricingProps {
 }
 
 // ⚠️ IMPORTANTE: PEGA AQUÍ TU ENLACE DE STRIPE REAL
-const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/dRm4gA0d2gVsfRv3E9frW00; 
+const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/dRm4gA0d2gVsfRv3E9frW00"; 
 export const Pricing: React.FC<PricingProps> = ({ user, onUpgrade }) => {
 
   const handleSubscribe = () => {
