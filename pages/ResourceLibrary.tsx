@@ -7,8 +7,7 @@ import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
 // ¡ESTA LÍNEA ES VITAL PARA QUE NO SE ROMPA EL FOLIO!
-import './worksheet-preview.css';
-
+import './Worksheet-preview.css';
 export const ResourceLibrary = () => {
   const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
