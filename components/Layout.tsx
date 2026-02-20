@@ -3,12 +3,13 @@ import { User } from '../types';
 import { 
   LayoutDashboard, 
   BookOpen, 
-  Brain, // Usamos el cerebro como logo principal
+  Brain, 
   CreditCard, 
   Menu, 
   X, 
   LogOut,
-  User as UserIcon
+  User as UserIcon,
+  Sparkles
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -18,6 +19,17 @@ interface LayoutProps {
   currentPage: string;
   onNavigate: (page: string) => void;
 }
+
+// --- LOGO INTERACTIVO (Igual que en la Landing Page) ---
+const BrainLogo = () => (
+  <div className="relative group cursor-pointer">
+    <div className="absolute -inset-1 bg-gradient-to-r from-[#4F75FF] to-[#38bdf8] rounded-full blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+    <div className="relative w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-md border border-slate-100 transform group-hover:scale-105 transition-transform">
+      <Sparkles className="absolute top-0.5 right-0.5 w-2 h-2 text-[#4F75FF] animate-pulse z-10" />
+      <Brain className="w-5 h-5 text-[#4F75FF] z-10 relative" />
+    </div>
+  </div>
+);
 
 export const Layout: React.FC<LayoutProps> = ({ 
   children, 
@@ -31,106 +43,103 @@ export const Layout: React.FC<LayoutProps> = ({
   // Definición del menú
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'resources', label: 'Biblioteca', icon: BookOpen }, // Texto más corto para que quede limpio
+    { id: 'resources', label: 'Biblioteca', icon: BookOpen },
     { id: 'generator', label: 'Generador IA', icon: Brain },
     { id: 'pricing', label: 'Planes y Precios', icon: CreditCard },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row print:bg-white font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] flex flex-col md:flex-row print:bg-white font-sans overflow-hidden">
       
       {/* === HEADER MÓVIL === */}
-      <div className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center no-print sticky top-0 z-40">
-        <div className="flex items-center space-x-2">
-          {/* Logo móvil con cerebro */}
-          <Brain className="w-8 h-8 text-blue-600" />
-          <span className="font-bold text-lg text-slate-900">FichaLab</span>
+      <div className="md:hidden bg-white/80 backdrop-blur-md border-b border-slate-200 p-4 flex justify-between items-center no-print sticky top-0 z-50">
+        <div className="flex items-center space-x-3" onClick={() => onNavigate('dashboard')}>
+          <BrainLogo />
+          <span className="font-extrabold text-xl tracking-tight text-slate-900">FichaLab</span>
         </div>
-        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-slate-600 p-1">
+        <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="text-slate-600 p-2 hover:bg-slate-100 rounded-lg transition-colors">
           {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* === SIDEBAR (Barra Lateral) === */}
+      {/* === SIDEBAR (Barra Lateral Blanca) === */}
       <aside className={`
-        fixed inset-y-0 left-0 z-50 w-64 bg-slate-900 text-white transform transition-transform duration-300 ease-in-out shadow-2xl
+        fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none
         md:relative md:translate-x-0 no-print flex flex-col
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="p-6 flex flex-col h-full">
           
-          {/* LOGO DE ESCRITORIO (NUEVO DISEÑO CEREBRO) */}
+          {/* LOGO DE ESCRITORIO */}
           <div 
             className="hidden md:flex items-center gap-3 mb-10 px-2 cursor-pointer" 
             onClick={() => onNavigate('dashboard')}
           >
-            <div className="relative">
-              {/* Efecto de brillo detrás del cerebro */}
-              <div className="absolute -inset-1 bg-blue-500 rounded-full blur opacity-30"></div>
-              <Brain className="relative w-8 h-8 text-blue-500" />
-            </div>
-            <span className="text-xl font-bold tracking-tight text-white">
-              Ficha<span className="text-blue-500">Lab</span>
-            </span>
+            <BrainLogo />
+            <span className="text-2xl font-extrabold tracking-tight text-slate-900">FichaLab</span>
           </div>
 
           {/* TARJETA DE USUARIO */}
-          <div className="mb-6 px-3 py-3 bg-slate-800/50 border border-slate-700 rounded-xl backdrop-blur-sm">
+          <div className="mb-8 px-4 py-3.5 bg-slate-50 border border-slate-100 rounded-2xl">
             <div className="flex items-center space-x-3">
-              <div className="bg-slate-700 p-2 rounded-full border border-slate-600 text-blue-400">
-                <UserIcon size={16} />
+              <div className="bg-white p-2.5 rounded-xl border border-slate-200 text-[#4F75FF] shadow-sm">
+                <UserIcon size={18} />
               </div>
               <div className="overflow-hidden">
-                <p className="text-sm font-medium truncate text-slate-100">{user.name}</p>
-                <p className="text-xs text-slate-400 capitalize">{user.plan} Plan</p>
+                <p className="text-sm font-bold truncate text-slate-900">{user.name || "Usuario"}</p>
+                <p className="text-xs font-medium text-slate-500 capitalize flex items-center gap-1">
+                  {user.plan === 'premium' ? <Sparkles size={10} className="text-[#4F75FF]"/> : null}
+                  {user.plan} Plan
+                </p>
               </div>
             </div>
           </div>
 
           {/* NAVEGACIÓN */}
-          <nav className="flex-1 space-y-1">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  onNavigate(item.id);
-                  setIsSidebarOpen(false);
-                }}
-                className={`w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition-all duration-200 group ${
-                  currentPage === item.id 
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`}
-              >
-                <item.icon size={20} className={currentPage === item.id ? 'text-white' : 'group-hover:text-blue-400 transition-colors'} />
-                <span className="font-medium">{item.label}</span>
-              </button>
-            ))}
+          <nav className="flex-1 space-y-2">
+            {navItems.map((item) => {
+              const isActive = currentPage === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    onNavigate(item.id);
+                    setIsSidebarOpen(false);
+                  }}
+                  className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-2xl transition-all duration-200 group font-bold ${
+                    isActive 
+                      ? 'bg-blue-50 text-[#4F75FF]' 
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
+                  }`}
+                >
+                  <item.icon size={20} className={isActive ? 'text-[#4F75FF]' : 'text-slate-400 group-hover:text-[#4F75FF] transition-colors'} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
           </nav>
 
           {/* BOTÓN CERRAR SESIÓN */}
           <button 
             onClick={onLogout}
-            className="mt-auto flex items-center space-x-3 px-3 py-3 rounded-xl text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-colors border border-transparent hover:border-red-500/20"
+            className="mt-auto flex items-center space-x-3 px-4 py-3.5 rounded-2xl text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors font-bold group"
           >
-            <LogOut size={20} />
-            <span className="font-medium">Cerrar Sesión</span>
+            <LogOut size={20} className="text-slate-400 group-hover:text-red-500 transition-colors" />
+            <span>Cerrar Sesión</span>
           </button>
         </div>
       </aside>
 
       {/* === CONTENIDO PRINCIPAL === */}
-      <main className="flex-1 overflow-y-auto h-screen bg-slate-50 relative w-full">
-        {/* Padding responsivo para que no se pegue al borde */}
-        <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
-          {children}
-        </div>
+      {/* Ya no limitamos el ancho aquí, dejamos que cada página (Dashboard, Generador, etc) gestione su propio padding y ancho para no romper los diseños */}
+      <main className="flex-1 overflow-y-auto h-screen bg-[#F8FAFC] relative w-full flex flex-col">
+        {children}
       </main>
 
       {/* Overlay para móvil */}
       {isSidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden no-print backdrop-blur-sm"
+          className="fixed inset-0 bg-slate-900/20 z-40 md:hidden no-print backdrop-blur-sm transition-opacity"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}

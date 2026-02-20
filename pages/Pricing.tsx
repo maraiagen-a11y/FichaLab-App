@@ -1,5 +1,5 @@
 import React from 'react'; 
-import { Check, Zap, Crown, Shield } from 'lucide-react';
+import { Check, Zap, Crown, Shield, Sparkles, Brain, X } from 'lucide-react';
 import { User } from '../types';
 
 interface PricingProps {
@@ -7,8 +7,20 @@ interface PricingProps {
   onUpgrade: () => void;
 }
 
-// ⚠️ IMPORTANTE: PEGA AQUÍ TU ENLACE DE STRIPE REAL
+// ⚠️ IMPORTANTE: TU ENLACE DE STRIPE REAL
 const STRIPE_PAYMENT_LINK = "https://buy.stripe.com/dRm4gA0d2gVsfRv3E9frW00"; 
+
+// --- LOGO INTERACTIVO (BrainLogo) ---
+const BrainLogo = () => (
+  <div className="relative group cursor-pointer inline-block">
+    <div className="absolute -inset-1 bg-gradient-to-r from-[#4F75FF] to-[#38bdf8] rounded-full blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+    <div className="relative w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-md border border-slate-100 transform group-hover:scale-105 transition-transform">
+      <Sparkles className="absolute top-0.5 right-0.5 w-2 h-2 text-[#4F75FF] animate-pulse z-10" />
+      <Brain className="w-5 h-5 text-[#4F75FF] z-10 relative" />
+    </div>
+  </div>
+);
+
 export const Pricing: React.FC<PricingProps> = ({ user, onUpgrade }) => {
 
   const handleSubscribe = () => {
@@ -20,62 +32,102 @@ export const Pricing: React.FC<PricingProps> = ({ user, onUpgrade }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 py-12 px-4 font-sans">
-      <div className="max-w-5xl mx-auto text-center mb-12">
-        <h1 className="text-4xl font-bold text-slate-900 mb-4">Planes diseñados para profesores</h1>
-        <p className="text-xl text-slate-500 max-w-2xl mx-auto">
-          Empieza gratis y pásate al plan PRO por menos de lo que cuesta un desayuno.
+    <div className="min-h-screen bg-[#F8FAFC] py-16 px-4 font-sans">
+      
+      {/* HEADER DEL PRICING */}
+      <div className="max-w-5xl mx-auto text-center mb-16">
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <BrainLogo />
+          <span className="font-extrabold text-2xl tracking-tight text-slate-900">FichaLab</span>
+        </div>
+        <h1 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6">Planes para profesores</h1>
+        <p className="text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
+          Empieza gratis y pásate al plan PRO por menos de lo que cuesta un desayuno. Cancela cuando quieras.
         </p>
       </div>
 
-      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 items-center">
+      {/* GRID DE PRECIOS (Estilo unificado con la Landing) */}
+      <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 items-start">
+        
         {/* PLAN GRATUITO */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 relative overflow-hidden">
-          <div className="text-left">
-            <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">Plan Gratuito</h3>
-            <p className="text-slate-500 mt-2 text-sm">Para probar la herramienta.</p>
-            <div className="my-6">
-              <span className="text-4xl font-bold text-slate-900">0€</span><span className="text-slate-400">/mes</span>
-            </div>
-            <ul className="space-y-4 text-left mb-8">
-              <li className="flex items-center gap-3 text-slate-600"><Check size={18} className="text-green-500" /> Acceso a <strong>5 recursos</strong></li>
-              <li className="flex items-center gap-3 text-slate-600"><Check size={18} className="text-green-500" /> <strong>3 Fichas IA</strong> al mes</li>
-              <li className="flex items-center gap-3 text-slate-600"><Check size={18} className="text-green-500" /> Historial limitado</li>
-              <li className="flex items-center gap-3 text-slate-300"><Zap size={18} /> Descarga en PDF limpio</li>
-            </ul>
-            <button disabled className="w-full py-3 rounded-xl font-bold bg-slate-100 text-slate-400 border border-slate-200">Tu Plan Actual</button>
+        <div className="bg-white border border-slate-200 rounded-[2.5rem] p-10 flex flex-col relative mt-4">
+          <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 mb-6">
+            <Sparkles className="w-6 h-6" />
           </div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+            Plan Gratuito {user?.plan === 'free' && <span className="bg-slate-100 text-slate-600 text-xs px-2 py-1 rounded-full">Actual</span>}
+          </h3>
+          <p className="text-slate-500 mb-8">Perfecto para probar FichaLab.</p>
+          
+          <div className="mb-8">
+            <span className="text-5xl font-extrabold text-slate-900">0€</span><span className="text-slate-400 text-xl">/mes</span>
+          </div>
+
+          <div className="space-y-4 mb-10 flex-1">
+            <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> 3 generaciones al mes</div>
+            <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Biblioteca básica</div>
+            <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Exportar en PDF</div>
+            <div className="flex items-center gap-3 text-slate-400 opacity-60"><X className="w-5 h-5" /> Generaciones ilimitadas</div>
+            <div className="flex items-center gap-3 text-slate-400 opacity-60"><X className="w-5 h-5" /> Edición avanzada</div>
+          </div>
+
+          {user?.plan === 'free' ? (
+             <button disabled className="w-full py-4 rounded-xl font-bold bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed">Tu Plan Actual</button>
+          ) : user?.plan === 'premium' ? (
+             <button disabled className="w-full py-4 rounded-xl font-bold bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed">Ya eres Premium</button>
+          ) : (
+             <button onClick={onUpgrade} className="w-full py-4 rounded-xl font-bold text-slate-700 bg-white border-2 border-slate-200 hover:border-slate-300 transition-colors">Empezar gratis</button>
+          )}
         </div>
 
-        {/* PLAN PREMIUM */}
-        <div className="bg-slate-900 p-8 rounded-3xl shadow-2xl border border-slate-800 relative overflow-hidden transform md:scale-105">
-          <div className="absolute top-0 right-0 bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-bl-xl">RECOMENDADO</div>
-          <div className="text-left relative z-10">
-            <h3 className="text-xl font-bold text-white flex items-center gap-2">Plan Premium <Crown className="text-yellow-400 fill-yellow-400" size={20}/></h3>
-            <p className="text-slate-400 mt-2 text-sm">Potencia total para el aula.</p>
-            <div className="my-6">
-              <span className="text-4xl font-bold text-white">4.99€</span><span className="text-slate-500">/mes</span>
-            </div>
-            <p className="text-blue-200 text-xs mb-6 font-medium">o solo 49€/año (¡2 meses gratis!)</p>
-            <ul className="space-y-4 text-left text-slate-300 mb-8">
-              <li className="flex items-center gap-3"><Check size={16} className="text-blue-400" /> Acceso <strong>ILIMITADO</strong> a recursos</li>
-              <li className="flex items-center gap-3"><Check size={16} className="text-blue-400" /> Generaciones IA <strong>ILIMITADAS*</strong></li>
-              <li className="flex items-center gap-3"><Check size={16} className="text-blue-400" /> <strong className="text-white">Descarga PDF Profesional</strong></li>
-              <li className="flex items-center gap-3"><Check size={16} className="text-blue-400" /> Soporte técnico prioritario</li>
-            </ul>
-            {user?.plan === 'premium' ? (
-              <button disabled className="w-full py-3 rounded-xl font-bold bg-green-500/20 text-green-400 border border-green-500/50 flex justify-center items-center gap-2"><Check size={20}/> Plan Activo</button>
-            ) : (
-              <button onClick={handleSubscribe} className="w-full py-3 rounded-xl font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-900/50 transition-all flex justify-center items-center gap-2">Suscribirse Ahora</button>
-            )}
-            <p className="text-center text-xs text-slate-500 mt-4">*Uso responsable hasta 1000 gens/mes</p>
+        {/* PLAN PREMIUM (El destacado) */}
+        <div className="bg-white border-2 border-[#4F75FF] rounded-[2.5rem] p-10 flex flex-col relative shadow-2xl shadow-blue-900/10 transform md:scale-105 z-10">
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#4F75FF] text-white px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-1 shadow-md">
+            <Crown className="w-4 h-4 fill-current" /> Recomendado
           </div>
+
+          <div className="w-12 h-12 bg-[#4F75FF] rounded-xl flex items-center justify-center text-white mb-6">
+            <Zap className="w-6 h-6 fill-current" />
+          </div>
+          <h3 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+            Plan Premium {user?.plan === 'premium' && <span className="bg-[#4F75FF]/10 text-[#4F75FF] text-xs px-2 py-1 rounded-full">Actual</span>}
+          </h3>
+          <p className="text-slate-500 mb-8">Potencia total para tu aula.</p>
+          
+          <div className="mb-8 flex items-baseline gap-2">
+            <span className="text-5xl font-extrabold text-slate-900">4.99€</span>
+            <span className="text-slate-500 font-medium text-xl">/mes</span>
+          </div>
+          
+          {/* Oferta anual */}
+          <p className="text-[#4F75FF] bg-[#4F75FF]/10 text-sm mb-8 font-bold px-3 py-2 rounded-lg inline-block">
+            ✨ O solo 49€/año (¡2 meses gratis!)
+          </p>
+
+          <div className="space-y-4 mb-10 flex-1 font-medium">
+            <div className="flex items-center gap-3 text-slate-700"><Check className="w-5 h-5 text-[#4F75FF]" /> Generaciones IA <strong>ILIMITADAS*</strong></div>
+            <div className="flex items-center gap-3 text-slate-700"><Check className="w-5 h-5 text-[#4F75FF]" /> Biblioteca completa</div>
+            <div className="flex items-center gap-3 text-slate-700"><Check className="w-5 h-5 text-[#4F75FF]" /> Exportar PDF Profesional</div>
+            <div className="flex items-center gap-3 text-slate-700"><Check className="w-5 h-5 text-[#4F75FF]" /> Edición avanzada</div>
+            <div className="flex items-center gap-3 text-slate-700"><Check className="w-5 h-5 text-[#4F75FF]" /> Soporte prioritario</div>
+          </div>
+
+          {user?.plan === 'premium' ? (
+            <button disabled className="w-full py-4 rounded-xl font-bold bg-green-100 text-green-600 border border-green-200 flex justify-center items-center gap-2 cursor-not-allowed">
+              <Check size={20}/> Plan Activo
+            </button>
+          ) : (
+            <button onClick={handleSubscribe} className="w-full py-4 rounded-xl font-bold text-white bg-[#4F75FF] hover:bg-[#3d5ee6] shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 flex justify-center items-center gap-2">
+              <Zap size={20} className="fill-current"/> Suscribirse Ahora
+            </button>
+          )}
+          <p className="text-center text-xs text-slate-500 mt-4">*Uso responsable hasta 1000 gens/mes</p>
         </div>
       </div>
       
-       <div className="max-w-3xl mx-auto mt-16 text-center">
-        <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center justify-center gap-2"><Shield className="text-slate-400"/> Garantía de satisfacción</h3>
-        <p className="text-slate-500 text-sm">Cancela cuando quieras. Sin preguntas.</p>
+      <div className="max-w-3xl mx-auto mt-16 text-center pb-8">
+        <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center justify-center gap-2"><Shield className="text-slate-400" size={20}/> Garantía de satisfacción</h3>
+        <p className="text-slate-500 text-sm">Cancela tu suscripción en cualquier momento desde tu perfil. Sin preguntas.</p>
       </div>
     </div>
   );

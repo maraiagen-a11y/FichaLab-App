@@ -1,128 +1,302 @@
 import React from 'react';
-import { Sparkles, Zap, Brain, Shield, Library } from 'lucide-react';
+import { Sparkles, Library, Edit3, Download, Check, X, ArrowRight, Play, FileText, Zap, Brain } from 'lucide-react';
 
 interface LandingPageProps {
   onStart: () => void;
   onExplore: () => void;
 }
 
+// --- LOGO INTERACTIVO (El Cerebro) ---
+const BrainLogo = ({ className = "w-10 h-10" }) => (
+  <div className={`relative group cursor-pointer ${className}`}>
+    <div className="absolute -inset-1 bg-gradient-to-r from-[#4F75FF] to-[#38bdf8] rounded-full blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
+    <div className="relative w-full h-full bg-white rounded-xl flex items-center justify-center shadow-md border border-slate-100 transform group-hover:scale-105 transition-transform">
+      <Sparkles className="absolute top-1 right-1 w-2.5 h-2.5 text-[#4F75FF] animate-pulse z-10" />
+      <Brain className="w-3/5 h-3/5 text-[#4F75FF] z-10 relative" />
+    </div>
+  </div>
+);
+
 export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) => {
   return (
-    // He cambiado 'brand' por 'blue' e 'indigo' estándar para asegurar que se vean los colores
-    // Si tienes configurado 'brand' en tu tailwind.config, puedes cambiarlo de vuelta.
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 font-sans text-slate-900 overflow-x-hidden">
+    <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 overflow-x-hidden">
       
-      {/* NAVBAR */}
-      {/* px-4 en móvil, px-6 en escritorio (md) */}
-      <nav className="flex items-center justify-between px-4 py-4 md:px-6 md:py-6 max-w-7xl mx-auto">
-        <div className="flex items-center gap-2">
-          <div className="bg-blue-600 text-white p-2 rounded-lg">
-            <Sparkles className="w-5 h-5" />
+      {/* --- NAVBAR --- */}
+      <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            
+            {/* Logo FichaLab */}
+            <div className="flex items-center gap-3 cursor-pointer">
+              <BrainLogo className="w-10 h-10" />
+              <span className="font-extrabold text-2xl tracking-tight text-slate-900">FichaLab</span>
+            </div>
+
+            {/* Enlaces de Escritorio */}
+            <div className="hidden md:flex items-center gap-8 text-slate-500 font-medium">
+              <span className="hover:text-slate-900 cursor-pointer transition-colors flex items-center gap-2"><FileText size={18}/> Inicio</span>
+              <span onClick={onStart} className="hover:text-slate-900 cursor-pointer transition-colors flex items-center gap-2"><Zap size={18}/> Generador IA</span>
+              <span onClick={onExplore} className="hover:text-slate-900 cursor-pointer transition-colors flex items-center gap-2"><Library size={18}/> Biblioteca</span>
+              <span onClick={onStart} className="hover:text-slate-900 cursor-pointer transition-colors flex items-center gap-2"><Sparkles size={18}/> Premium</span>
+            </div>
+
+            {/* Botones Derecha */}
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={onStart}
+                className="hidden md:block text-slate-600 hover:text-slate-900 font-bold transition-colors"
+              >
+                Iniciar sesión
+              </button>
+              <button 
+                onClick={onStart}
+                className="bg-[#4F75FF] hover:bg-[#3d5ee6] text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5"
+              >
+                Empezar gratis
+              </button>
+            </div>
           </div>
-          <span className="text-lg md:text-xl font-bold tracking-tight text-slate-900">FichaLab</span>
-        </div>
-        <div className="flex gap-3">
-          <button 
-            onClick={onExplore}
-            className="hidden md:block text-slate-600 hover:text-blue-600 font-medium transition-colors px-4 py-2"
-          >
-            Explorar Fichas
-          </button>
-          {/* Botón más compacto en móvil */}
-          <button 
-            onClick={onStart} 
-            className="px-4 py-2 md:px-5 md:py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-medium text-sm md:text-base transition-all shadow-lg shadow-blue-200"
-          >
-            Empezar Gratis
-          </button>
         </div>
       </nav>
 
-      {/* HERO SECTION */}
-      {/* Menos padding arriba (pt-12) en móvil, mucho en PC (md:pt-20) */}
-      <main className="max-w-5xl mx-auto px-4 md:px-6 pt-12 pb-20 md:pt-20 md:pb-32 text-center">
-        
-        {/* Badge: Texto más pequeño en móvil */}
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 md:px-4 md:py-2 rounded-full bg-blue-50 text-blue-700 text-xs md:text-sm font-semibold mb-6 md:mb-8 border border-blue-100">
-          <Zap className="w-3 h-3 md:w-4 md:h-4 fill-current" />
-          <span>Nueva IA Generativa v2.0</span>
-        </div>
-        
-        {/* TÍTULO: Aquí estaba el problema principal. 
-            text-4xl en móvil -> text-7xl en escritorio.
-            Añadido break-words para evitar desbordes. */}
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight text-slate-900 mb-6 md:mb-8 leading-tight drop-shadow-sm">
-          Crea fichas educativas <br className="hidden md:block" />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 block md:inline mt-2 md:mt-0">
-            en segundos.
-          </span>
-        </h1>
-        
-        <p className="text-lg md:text-xl text-slate-500 max-w-2xl mx-auto mb-8 md:mb-12 leading-relaxed px-2">
-          FichaLab es la herramienta definitiva para profesores. Genera ejercicios, exámenes y material de estudio ilimitado con Inteligencia Artificial.
-        </p>
-        
-        {/* BOTONES: En móvil columna (vertical), en PC fila. Ancho completo en móvil. */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center px-2">
-          <button 
-            onClick={onStart}
-            className="w-full sm:w-auto px-6 py-3.5 md:px-8 md:py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-xl md:rounded-2xl font-bold text-base md:text-lg transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 flex items-center justify-center gap-2"
-          >
-            <Sparkles className="w-5 h-5" />
-            Crear mi primera ficha
-          </button>
-          
-          <button 
-            onClick={onExplore}
-            className="w-full sm:w-auto px-6 py-3.5 md:px-8 md:py-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl md:rounded-2xl font-bold text-base md:text-lg transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2"
-          >
-            <Library className="w-5 h-5" />
-            Ver Galería Pública
-          </button>
-        </div>
+      {/* --- HERO SECTION --- */}
+      <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50/50 via-[#F8FAFC] to-[#F8FAFC]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            
+            {/* Texto Izquierda */}
+            <div className="text-left">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-slate-600 text-sm font-semibold mb-8">
+                <BrainLogo className="w-5 h-5" />
+                Potenciado por Inteligencia Artificial
+              </div>
+              
+              <h1 className="text-5xl lg:text-[5.5rem] font-extrabold tracking-tight text-slate-900 mb-6 leading-[1.1]">
+                Crea recursos <br /> educativos <span className="text-[#4F75FF]">en</span> <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F75FF] to-[#38bdf8]">
+                  segundos
+                </span>
+              </h1>
+              
+              <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-lg leading-relaxed">
+                FichaLab genera fichas, exámenes, resúmenes y materiales didácticos personalizados con IA. Perfecto para estudiantes y profesores.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4">
+                <button 
+                  onClick={onStart}
+                  className="px-8 py-4 bg-[#4F75FF] hover:bg-[#3d5ee6] text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
+                >
+                  Empezar gratis
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+                <button 
+                  onClick={onExplore}
+                  className="px-8 py-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-full font-bold text-lg transition-all shadow-sm flex items-center justify-center gap-2"
+                >
+                  <Play className="w-5 h-5" />
+                  Ver galería
+                </button>
+              </div>
 
-        {/* FEATURES GRID */}
-        {/* mt-16 en móvil para separar menos, text-center en móvil para que quede centrado */}
-        <div className="grid md:grid-cols-3 gap-6 md:gap-8 mt-16 md:mt-32 text-center md:text-left">
-          
-          {/* Card 1 */}
-          <div className="bg-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
-            <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-4 md:mb-6 mx-auto md:mx-0">
-              <Zap className="w-6 h-6" />
+              {/* Prueba Social */}
+              <div className="mt-12 flex items-center gap-4">
+                <div className="flex -space-x-3">
+                  {['A','B','C','D'].map((letter, i) => (
+                    <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 shadow-sm">
+                      {letter}
+                    </div>
+                  ))}
+                </div>
+                <p className="text-sm font-semibold text-slate-600">
+                  <span className="text-slate-900 font-bold">+2,500</span> educadores confían en FichaLab
+                </p>
+              </div>
             </div>
-            <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3">Instantáneo</h3>
-            <p className="text-slate-500 leading-relaxed text-sm md:text-base">
-              Olvídate de buscar en Google. Pide "Ejercicios de sumas para 2º de primaria" y tenlo listo para imprimir.
+
+            {/* Imagen/Tarjeta Derecha */}
+            <div className="relative hidden lg:block">
+              <div className="absolute -top-6 -right-6 bg-white px-5 py-3 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 z-20 flex items-center gap-2 font-bold text-sm text-slate-700 animate-bounce">
+                <Zap className="w-5 h-5 text-yellow-500 fill-yellow-500" /> IA Generando...
+              </div>
+
+              <div className="bg-white rounded-[2rem] p-8 shadow-2xl shadow-blue-900/5 border border-slate-100 relative z-10">
+                <div className="flex items-start gap-4 mb-8">
+                  <div className="bg-blue-50 p-4 rounded-2xl text-[#4F75FF]">
+                    <FileText className="w-8 h-8" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-slate-900">Ficha de Matemáticas</h3>
+                    <p className="text-slate-500">Generada en 5 segundos</p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-8">
+                  <div className="h-4 bg-slate-100 rounded-full w-full"></div>
+                  <div className="h-4 bg-slate-100 rounded-full w-5/6"></div>
+                  <div className="h-4 bg-slate-100 rounded-full w-4/6"></div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="border border-blue-100 bg-blue-50/30 rounded-2xl p-4 text-center">
+                    <div className="text-3xl font-extrabold text-[#4F75FF] mb-1">10</div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Ejercicios</div>
+                  </div>
+                  <div className="border border-green-100 bg-green-50/30 rounded-2xl p-4 text-center">
+                    <div className="text-3xl font-extrabold text-green-500 mb-1">3</div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Páginas</div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="absolute -bottom-6 -left-6 bg-white px-5 py-3 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 z-20 flex items-center gap-3 font-bold text-sm text-slate-700">
+                <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
+                Listo para descargar
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      {/* --- SECTION: CARACTERÍSTICAS --- */}
+      <div className="py-24 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-[#4F75FF] font-semibold tracking-wide uppercase text-sm mb-3">Características</h2>
+            <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
+              Todo lo que necesitas para crear recursos educativos
+            </h3>
+            <p className="text-lg text-slate-500">
+              FichaLab te ofrece herramientas potentes y fáciles de usar para generar materiales didácticos de calidad profesional.
             </p>
           </div>
 
-          {/* Card 2 */}
-          <div className="bg-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
-            <div className="w-12 h-12 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 mb-4 md:mb-6 mx-auto md:mx-0">
-              <Brain className="w-6 h-6" />
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+              {/* CORRECCIÓN: Ahora tiene el cerebro con su color azul en lugar del logo viejo */}
+              <div className="bg-blue-50 w-14 h-14 rounded-2xl flex items-center justify-center text-[#4F75FF] mb-6">
+                <Brain className="w-7 h-7" />
+              </div>
+              <h4 className="text-xl font-bold text-slate-900 mb-3">Generación con IA</h4>
+              <p className="text-slate-500 leading-relaxed">Crea fichas, exámenes y resúmenes en segundos. Solo describe lo que necesitas y la IA lo genera por ti.</p>
             </div>
-            <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3">IA Pedagógica</h3>
-            <p className="text-slate-500 leading-relaxed text-sm md:text-base">
-              Nuestra IA entiende el currículo escolar. Adapta la dificultad y el tono según la edad de tus alumnos.
+
+            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+              <div className="bg-green-50 w-14 h-14 rounded-2xl flex items-center justify-center text-green-500 mb-6">
+                <Library className="w-7 h-7" />
+              </div>
+              <h4 className="text-xl font-bold text-slate-900 mb-3">Biblioteca Personal</h4>
+              <p className="text-slate-500 leading-relaxed">Guarda todos tus recursos en un solo lugar. Organiza por asignaturas, temas o fecha de creación.</p>
+            </div>
+
+            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+              <div className="bg-indigo-50 w-14 h-14 rounded-2xl flex items-center justify-center text-indigo-500 mb-6">
+                <Edit3 className="w-7 h-7" />
+              </div>
+              <h4 className="text-xl font-bold text-slate-900 mb-3">Edición Flexible</h4>
+              <p className="text-slate-500 leading-relaxed">Personaliza cualquier ficha generada. Modifica contenido, formato y estilo según tus necesidades.</p>
+            </div>
+
+            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+              <div className="bg-emerald-50 w-14 h-14 rounded-2xl flex items-center justify-center text-emerald-500 mb-6">
+                <Download className="w-7 h-7" />
+              </div>
+              <h4 className="text-xl font-bold text-slate-900 mb-3">Exporta en PDF</h4>
+              <p className="text-slate-500 leading-relaxed">Descarga tus recursos en formato PDF listo para imprimir o compartir con tus alumnos.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* --- SECTION: PRECIOS --- */}
+      <div className="py-24 bg-[#F8FAFC]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-16">
+            <h2 className="text-[#4F75FF] font-semibold tracking-wide uppercase text-sm mb-3">Precios</h2>
+            <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6">
+              Un plan para cada necesidad
+            </h3>
+            <p className="text-lg text-slate-500">
+              Empieza gratis y actualiza cuando lo necesites. Sin compromisos, cancela cuando quieras.
             </p>
           </div>
 
-          {/* Card 3 */}
-          <div className="bg-white p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-sm border border-slate-100 hover:border-blue-200 transition-colors">
-            <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 mb-4 md:mb-6 mx-auto md:mx-0">
-              <Shield className="w-6 h-6" />
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            
+            <div className="bg-white border border-slate-200 rounded-[2.5rem] p-10 flex flex-col relative mt-4">
+              {/* CORRECCIÓN: El plan free ahora tiene un icono de archivo en vez del logo viejo */}
+              <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 mb-6">
+                <FileText className="w-6 h-6" />
+              </div>
+              <h4 className="text-2xl font-bold text-slate-900 mb-2">Free</h4>
+              <p className="text-slate-500 mb-8">Perfecto para probar FichaLab</p>
+              
+              <div className="mb-8">
+                <span className="text-5xl font-extrabold text-slate-900">Gratis</span>
+              </div>
+
+              <div className="space-y-4 mb-10 flex-1">
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> 3 generaciones al mes</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Biblioteca básica</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Exportar en PDF</div>
+                <div className="flex items-center gap-3 text-slate-400 opacity-60"><X className="w-5 h-5" /> Generaciones ilimitadas</div>
+                <div className="flex items-center gap-3 text-slate-400 opacity-60"><X className="w-5 h-5" /> Edición avanzada</div>
+              </div>
+
+              <button 
+                onClick={onStart}
+                className="w-full py-4 rounded-xl font-bold text-slate-700 bg-white border-2 border-slate-200 hover:border-slate-300 transition-colors"
+              >
+                Empezar gratis
+              </button>
             </div>
-            <h3 className="text-lg md:text-xl font-bold mb-2 md:mb-3">Tuyo para siempre</h3>
-            <p className="text-slate-500 leading-relaxed text-sm md:text-base">
-              Todo lo que generas es tuyo. Guárdalo en tu biblioteca privada o compártelo con la comunidad.
-            </p>
+
+            <div className="bg-white border-2 border-[#4F75FF] rounded-[2.5rem] p-10 flex flex-col relative shadow-2xl shadow-blue-900/10">
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#4F75FF] text-white px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-1 shadow-md">
+                <Sparkles className="w-4 h-4" /> Más popular
+              </div>
+
+              <div className="mb-6">
+                <BrainLogo className="w-12 h-12" />
+              </div>
+              <h4 className="text-2xl font-bold text-slate-900 mb-2">Premium</h4>
+              <p className="text-slate-500 mb-8">Para educadores profesionales</p>
+              
+              <div className="mb-8 flex items-baseline gap-2">
+                <span className="text-5xl font-extrabold text-slate-900">4.99</span>
+                <span className="text-slate-500 font-medium text-lg">/mes</span>
+              </div>
+
+              <div className="space-y-4 mb-10 flex-1">
+                <div className="flex items-center gap-3 text-slate-600 font-medium"><Check className="w-5 h-5 text-[#4F75FF]" /> Generaciones ilimitadas</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Biblioteca completa</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Exportar en PDF</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Edición avanzada</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Plantillas exclusivas</div>
+              </div>
+
+              <button 
+                onClick={onStart}
+                className="w-full py-4 rounded-xl font-bold text-white bg-[#4F75FF] hover:bg-[#3d5ee6] shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5"
+              >
+                Comenzar ahora
+              </button>
+            </div>
+
           </div>
         </div>
-      </main>
-      
+      </div>
+
       {/* FOOTER */}
-      <footer className="border-t border-slate-200 py-8 md:py-12 text-center text-slate-400 text-xs md:text-sm px-4">
-        <p>© 2024 FichaLab. Hecho con ❤️ para profesores.</p>
+      <footer className="bg-white border-t border-slate-200 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex items-center gap-3">
+            <BrainLogo className="w-8 h-8" />
+            <span className="font-extrabold text-xl text-slate-900">FichaLab</span>
+          </div>
+          <p className="text-slate-500 text-sm">© 2026 FichaLab. Todos los derechos reservados.</p>
+        </div>
       </footer>
     </div>
   );
