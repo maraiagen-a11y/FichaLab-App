@@ -28,10 +28,9 @@ const GUEST_USER: User = {
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   
-  // 1. CORRECCIÓN CRÍTICA: Detectamos la URL *al inicio* del estado, no después.
-  // Si la barra dice payment-success, arrancamos ahí directamente.
+  // 1. CORRECCIÓN APLICADA: Detectamos la URL exacta de Stripe (/PaymentSuccess)
   const [currentPage, setCurrentPage] = useState(
-    window.location.pathname === '/payment-success' ? 'payment_success' : 'landing'
+    window.location.pathname === '/PaymentSuccess' ? 'payment_success' : 'landing'
   );
 
   const [authView, setAuthView] = useState<'login' | 'register'>('login');
@@ -95,10 +94,8 @@ const App: React.FC = () => {
         });
         setIsAuthenticated(true);
         
-        // 3. PROTECCIÓN: Solo vamos al Dashboard si NO estamos en la página de éxito
-        // Y hemos quitado el borrado de URL para que esta comprobación funcione bien.
-        if (window.location.pathname !== '/payment-success') {
-           // Si estábamos cargando y no es payment_success, vamos al dashboard
+        // 3. CORRECCIÓN APLICADA: Solo vamos al Dashboard si NO estamos en la página de éxito
+        if (window.location.pathname !== '/PaymentSuccess') {
            if (loading) setCurrentPage('dashboard');
         }
       }
@@ -130,7 +127,6 @@ const App: React.FC = () => {
 
   if (loading) return <div className="min-h-screen flex items-center justify-center">Cargando FichaLab...</div>;
   
-  // Evitamos mostrar Landing si estamos en payment_success
   if (!isAuthenticated && currentPage === 'landing' && currentPage !== 'payment_success') {
     return (
       <LandingPage 
@@ -152,7 +148,6 @@ const App: React.FC = () => {
   if (!user) return null;
 
   const renderPage = () => {
-    // Si estamos en payment_success, ignoramos el onboarding temporalmente
     if (currentPage === 'payment_success') {
        return <PaymentSuccess user={user} onNavigate={setCurrentPage} />;
     }
