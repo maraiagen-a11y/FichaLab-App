@@ -1,12 +1,12 @@
-import React from 'react';
-import { Sparkles, Library, Edit3, Download, Check, X, ArrowRight, Play, FileText, Zap, Brain } from 'lucide-react';
+import React, { useState } from 'react';
+import { Sparkles, Library, Edit3, Download, Check, X, ArrowRight, Play, FileText, Zap, Brain, MessageSquare, Printer, Target, CheckSquare, Languages, Copy, Rocket } from 'lucide-react';
 
 interface LandingPageProps {
   onStart: () => void;
   onExplore: () => void;
 }
 
-// --- LOGO INTERACTIVO (El Cerebro) ---
+// --- LOGO INTERACTIVO ---
 const BrainLogo = ({ className = "w-10 h-10" }) => (
   <div className={`relative group cursor-pointer ${className}`}>
     <div className="absolute -inset-1 bg-gradient-to-r from-[#4F75FF] to-[#38bdf8] rounded-full blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
@@ -18,6 +18,8 @@ const BrainLogo = ({ className = "w-10 h-10" }) => (
 );
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) => {
+  const [isAnnual, setIsAnnual] = useState(true);
+
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 overflow-x-hidden">
       
@@ -25,33 +27,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
       <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            
-            {/* Logo FichaLab */}
             <div className="flex items-center gap-3 cursor-pointer">
               <BrainLogo className="w-10 h-10" />
               <span className="font-extrabold text-2xl tracking-tight text-slate-900">FichaLab</span>
             </div>
-
-            {/* Enlaces de Escritorio */}
             <div className="hidden md:flex items-center gap-8 text-slate-500 font-medium">
               <span className="hover:text-slate-900 cursor-pointer transition-colors flex items-center gap-2"><FileText size={18}/> Inicio</span>
-              <span onClick={onStart} className="hover:text-slate-900 cursor-pointer transition-colors flex items-center gap-2"><Zap size={18}/> Generador IA</span>
-              <span onClick={onExplore} className="hover:text-slate-900 cursor-pointer transition-colors flex items-center gap-2"><Library size={18}/> Biblioteca</span>
-              <span onClick={onStart} className="hover:text-slate-900 cursor-pointer transition-colors flex items-center gap-2"><Sparkles size={18}/> Premium</span>
+              <span onClick={onExplore} className="hover:text-slate-900 cursor-pointer transition-colors flex items-center gap-2"><Library size={18}/> Ejemplos</span>
             </div>
-
-            {/* Botones Derecha */}
             <div className="flex items-center gap-4">
-              <button 
-                onClick={onStart}
-                className="hidden md:block text-slate-600 hover:text-slate-900 font-bold transition-colors"
-              >
+              <button onClick={onStart} className="hidden md:block text-slate-600 hover:text-slate-900 font-bold transition-colors">
                 Iniciar sesión
               </button>
-              <button 
-                onClick={onStart}
-                className="bg-[#4F75FF] hover:bg-[#3d5ee6] text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5"
-              >
+              <button onClick={onStart} className="bg-[#4F75FF] hover:bg-[#3d5ee6] text-white px-6 py-2.5 rounded-full font-bold transition-all shadow-lg shadow-blue-500/30 transform hover:-translate-y-0.5">
                 Empezar gratis
               </button>
             </div>
@@ -59,16 +47,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
         </div>
       </nav>
 
-      {/* --- HERO SECTION --- */}
-      <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50/50 via-[#F8FAFC] to-[#F8FAFC]">
+      {/* --- 1. HERO SECTION --- */}
+      <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50/80 via-[#F8FAFC] to-[#F8FAFC]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             
-            {/* Texto Izquierda */}
             <div className="text-left">
-              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-slate-600 text-sm font-semibold mb-8">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-slate-600 text-sm font-semibold mb-8 animate-fade-in-up">
                 <BrainLogo className="w-5 h-5" />
-                Potenciado por Inteligencia Artificial
+                La IA diseñada para profesores
               </div>
               
               <h1 className="text-5xl lg:text-[5.5rem] font-extrabold tracking-tight text-slate-900 mb-6 leading-[1.1]">
@@ -79,42 +66,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
               </h1>
               
               <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-lg leading-relaxed">
-                FichaLab genera fichas, exámenes, resúmenes y materiales didácticos personalizados con IA. Perfecto para estudiantes y profesores.
+                Dile a la IA qué necesitas repasar. Genera el contenido, adáptalo al nivel de tus alumnos y descárgalo en PDF listo para imprimir junto con su solucionario.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
-                <button 
-                  onClick={onStart}
-                  className="px-8 py-4 bg-[#4F75FF] hover:bg-[#3d5ee6] text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2"
-                >
+                <button onClick={onStart} className="px-8 py-4 bg-[#4F75FF] hover:bg-[#3d5ee6] text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
                   Empezar gratis
                   <ArrowRight className="w-5 h-5" />
                 </button>
-                <button 
-                  onClick={onExplore}
-                  className="px-8 py-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-full font-bold text-lg transition-all shadow-sm flex items-center justify-center gap-2"
-                >
+                <button onClick={onExplore} className="px-8 py-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-full font-bold text-lg transition-all shadow-sm flex items-center justify-center gap-2">
                   <Play className="w-5 h-5" />
                   Ver galería
                 </button>
               </div>
-
-              {/* Prueba Social */}
-              <div className="mt-12 flex items-center gap-4">
-                <div className="flex -space-x-3">
-                  {['A','B','C','D'].map((letter, i) => (
-                    <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 shadow-sm">
-                      {letter}
-                    </div>
-                  ))}
-                </div>
-                <p className="text-sm font-semibold text-slate-600">
-                  <span className="text-slate-900 font-bold">+2,500</span> educadores confían en FichaLab
-                </p>
-              </div>
             </div>
 
-            {/* Imagen/Tarjeta Derecha */}
             <div className="relative hidden lg:block">
               <div className="absolute -top-6 -right-6 bg-white px-5 py-3 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 z-20 flex items-center gap-2 font-bold text-sm text-slate-700 animate-bounce">
                 <Zap className="w-5 h-5 text-yellow-500 fill-yellow-500" /> IA Generando...
@@ -159,131 +125,210 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
         </div>
       </div>
 
-      {/* --- SECTION: CARACTERÍSTICAS --- */}
-      <div className="py-24 bg-white">
+      {/* --- 2. EL MÉTODO EN 3 PASOS --- */}
+      <div className="py-24 bg-white border-y border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-[#4F75FF] font-semibold tracking-wide uppercase text-sm mb-3">Características</h2>
-            <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
-              Todo lo que necesitas para crear recursos educativos
+            <h2 className="text-[#4F75FF] font-bold tracking-wide uppercase text-sm mb-3">Tu flujo de trabajo</h2>
+            <h3 className="text-3xl md:text-4xl font-extrabold text-slate-900">
+              De tu cabeza a la impresora en 3 pasos
             </h3>
-            <p className="text-lg text-slate-500">
-              FichaLab te ofrece herramientas potentes y fáciles de usar para generar materiales didácticos de calidad profesional.
-            </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all">
-              {/* CORRECCIÓN: Ahora tiene el cerebro con su color azul en lugar del logo viejo */}
-              <div className="bg-blue-50 w-14 h-14 rounded-2xl flex items-center justify-center text-[#4F75FF] mb-6">
-                <Brain className="w-7 h-7" />
+          <div className="grid md:grid-cols-3 gap-10 relative">
+            <div className="hidden md:block absolute top-12 left-[15%] right-[15%] h-0.5 bg-slate-100 border-t-2 border-dashed border-slate-200 z-0"></div>
+            
+            <div className="relative z-10 bg-white p-6 text-center hover:-translate-y-2 transition-transform duration-300">
+              <div className="w-20 h-20 mx-auto bg-blue-50 text-[#4F75FF] rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-blue-100">
+                <MessageSquare className="w-10 h-10" />
               </div>
-              <h4 className="text-xl font-bold text-slate-900 mb-3">Generación con IA</h4>
-              <p className="text-slate-500 leading-relaxed">Crea fichas, exámenes y resúmenes en segundos. Solo describe lo que necesitas y la IA lo genera por ti.</p>
+              <h4 className="text-xl font-bold text-slate-900 mb-2">1. Pide por esa boquita</h4>
+              <p className="text-slate-500 text-sm">Elige el curso, el tema y siéntete libre de pedir locuras: "Que los ejercicios hablen de videojuegos".</p>
             </div>
 
-            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all">
-              <div className="bg-green-50 w-14 h-14 rounded-2xl flex items-center justify-center text-green-500 mb-6">
-                <Library className="w-7 h-7" />
+            <div className="relative z-10 bg-white p-6 text-center hover:-translate-y-2 transition-transform duration-300">
+              <div className="w-20 h-20 mx-auto bg-blue-50 text-[#4F75FF] rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-blue-100">
+                <Brain className="w-10 h-10" />
               </div>
-              <h4 className="text-xl font-bold text-slate-900 mb-3">Biblioteca Personal</h4>
-              <p className="text-slate-500 leading-relaxed">Guarda todos tus recursos en un solo lugar. Organiza por asignaturas, temas o fecha de creación.</p>
+              <h4 className="text-xl font-bold text-slate-900 mb-2">2. Magia de la IA</h4>
+              <p className="text-slate-500 text-sm">FichaLab redacta los ejercicios y maqueta el documento entero de forma impecable en menos de 5 segundos.</p>
             </div>
 
-            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all">
-              <div className="bg-indigo-50 w-14 h-14 rounded-2xl flex items-center justify-center text-indigo-500 mb-6">
-                <Edit3 className="w-7 h-7" />
+            <div className="relative z-10 bg-white p-6 text-center hover:-translate-y-2 transition-transform duration-300">
+              <div className="w-20 h-20 mx-auto bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-emerald-100">
+                <Printer className="w-10 h-10" />
               </div>
-              <h4 className="text-xl font-bold text-slate-900 mb-3">Edición Flexible</h4>
-              <p className="text-slate-500 leading-relaxed">Personaliza cualquier ficha generada. Modifica contenido, formato y estilo según tus necesidades.</p>
-            </div>
-
-            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all">
-              <div className="bg-emerald-50 w-14 h-14 rounded-2xl flex items-center justify-center text-emerald-500 mb-6">
-                <Download className="w-7 h-7" />
-              </div>
-              <h4 className="text-xl font-bold text-slate-900 mb-3">Exporta en PDF</h4>
-              <p className="text-slate-500 leading-relaxed">Descarga tus recursos en formato PDF listo para imprimir o compartir con tus alumnos.</p>
+              <h4 className="text-xl font-bold text-slate-900 mb-2">3. Descarga e Imprime</h4>
+              <p className="text-slate-500 text-sm">Obtén un PDF perfecto para repartir en clase (¡y otro documento secreto con las soluciones!).</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* --- SECTION: PRECIOS --- */}
+      {/* --- 3. SUPERPODERES --- */}
       <div className="py-24 bg-[#F8FAFC]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-[#4F75FF] font-semibold tracking-wide uppercase text-sm mb-3">Precios</h2>
-            <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6">
-              Un plan para cada necesidad
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-[#4F75FF] font-semibold tracking-wide uppercase text-sm mb-3">Diseñado para el aula</h2>
+            <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6 leading-tight">
+              Tus nuevos superpoderes docentes
             </h3>
-            <p className="text-lg text-slate-500">
-              Empieza gratis y actualiza cuando lo necesites. Sin compromisos, cancela cuando quieras.
-            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+              <div className="bg-blue-50 w-14 h-14 rounded-2xl flex items-center justify-center text-[#4F75FF] mb-6">
+                <Target className="w-7 h-7" />
+              </div>
+              <h4 className="text-xl font-bold text-slate-900 mb-3">El Camaleón de Niveles</h4>
+              <p className="text-slate-500 leading-relaxed">¿Alumnos con distintos ritmos? Genera una ficha estándar y, con un clic, extrae una versión más sencilla para refuerzo o más compleja para ampliación.</p>
+            </div>
+
+            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+              <div className="bg-emerald-50 w-14 h-14 rounded-2xl flex items-center justify-center text-emerald-500 mb-6">
+                <CheckSquare className="w-7 h-7" />
+              </div>
+              <h4 className="text-xl font-bold text-slate-900 mb-3">El Fin de las Correcciones</h4>
+              <p className="text-slate-500 leading-relaxed">Se acabó llevarse trabajo a casa. FichaLab no solo genera los ejercicios para tus alumnos, sino que te entrega un documento privado con el solucionario exacto.</p>
+            </div>
+
+            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+              <div className="bg-orange-50 w-14 h-14 rounded-2xl flex items-center justify-center text-orange-500 mb-6">
+                <Languages className="w-7 h-7" />
+              </div>
+              <h4 className="text-xl font-bold text-slate-900 mb-3">Magia Bilingüe</h4>
+              <p className="text-slate-500 leading-relaxed">Ideal para centros bilingües. Pide el contenido en español para estructurarlo fácil y dile a la IA que genere el PDF final en inglés (o francés) adaptado al nivel.</p>
+            </div>
+
+            <div className="bg-white border border-slate-200 p-8 rounded-[2rem] hover:shadow-xl hover:shadow-slate-200/50 transition-all">
+              <div className="bg-purple-50 w-14 h-14 rounded-2xl flex items-center justify-center text-purple-500 mb-6">
+                <Copy className="w-7 h-7" />
+              </div>
+              <h4 className="text-xl font-bold text-slate-900 mb-3">Variantes Anti-Copia</h4>
+              <p className="text-slate-500 leading-relaxed">Genera un examen perfecto. Luego presiona un botón y obtén un "Modelo B" con preguntas equivalentes pero con distintos datos para evitar que los alumnos se copien.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* --- 4. PRECIOS CON TOGGLE ANUAL CORREGIDO --- */}
+      <div className="py-24 bg-white border-t border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-10">
+            <h2 className="text-[#4F75FF] font-bold tracking-wide uppercase text-sm mb-3">Planes Simples</h2>
+            <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6">
+              Recupera tu tiempo libre
+            </h3>
+          </div>
+
+          {/* TOGGLE MENSUAL / ANUAL CORREGIDO */}
+          <div className="flex justify-center mb-12">
+            <div className="relative">
+              {/* Etiqueta flotante estilo "Sticker" */}
+              <span className="absolute -top-4 -right-4 bg-green-100 text-green-700 text-[10px] font-extrabold uppercase px-3 py-1 rounded-full shadow-sm z-20 transform rotate-3">
+                2 Meses Gratis
+              </span>
+
+              <div className="bg-slate-100 p-1.5 rounded-full inline-flex relative shadow-inner">
+                <button 
+                  onClick={() => setIsAnnual(false)}
+                  className={`relative z-10 w-32 py-2.5 rounded-full font-bold text-sm transition-colors duration-300 ${!isAnnual ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Mensual
+                </button>
+                <button 
+                  onClick={() => setIsAnnual(true)}
+                  className={`relative z-10 w-32 py-2.5 rounded-full font-bold text-sm transition-colors duration-300 ${isAnnual ? 'text-slate-900' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  Anual
+                </button>
+                
+                {/* Fondo animado del toggle (Tamaño exacto) */}
+                <div 
+                  className={`absolute top-1.5 bottom-1.5 w-32 bg-white rounded-full shadow-sm transition-transform duration-300 ease-in-out ${isAnnual ? 'translate-x-full' : 'translate-x-0'}`}
+                ></div>
+              </div>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             
+            {/* PLAN FREE */}
             <div className="bg-white border border-slate-200 rounded-[2.5rem] p-10 flex flex-col relative mt-4">
-              {/* CORRECCIÓN: El plan free ahora tiene un icono de archivo en vez del logo viejo */}
               <div className="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 mb-6">
                 <FileText className="w-6 h-6" />
               </div>
               <h4 className="text-2xl font-bold text-slate-900 mb-2">Free</h4>
-              <p className="text-slate-500 mb-8">Perfecto para probar FichaLab</p>
+              <p className="text-slate-500 mb-8">Perfecto para probar la magia</p>
               
-              <div className="mb-8">
+              <div className="mb-8 h-[60px] flex items-center">
                 <span className="text-5xl font-extrabold text-slate-900">Gratis</span>
               </div>
 
               <div className="space-y-4 mb-10 flex-1">
                 <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> 3 generaciones al mes</div>
-                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Biblioteca básica</div>
-                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Exportar en PDF</div>
-                <div className="flex items-center gap-3 text-slate-400 opacity-60"><X className="w-5 h-5" /> Generaciones ilimitadas</div>
-                <div className="flex items-center gap-3 text-slate-400 opacity-60"><X className="w-5 h-5" /> Edición avanzada</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Exportar en PDF listos para imprimir</div>
+                <div className="flex items-center gap-3 text-slate-400 opacity-60"><X className="w-5 h-5" /> Fichas ilimitadas y solucionarios</div>
               </div>
 
-              <button 
-                onClick={onStart}
-                className="w-full py-4 rounded-xl font-bold text-slate-700 bg-white border-2 border-slate-200 hover:border-slate-300 transition-colors"
-              >
-                Empezar gratis
+              <button onClick={onStart} className="w-full py-4 rounded-xl font-bold text-slate-700 bg-white border-2 border-slate-200 hover:border-slate-300 transition-colors">
+                Crear cuenta gratuita
               </button>
             </div>
 
+            {/* PLAN PREMIUM */}
             <div className="bg-white border-2 border-[#4F75FF] rounded-[2.5rem] p-10 flex flex-col relative shadow-2xl shadow-blue-900/10">
               <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-[#4F75FF] text-white px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-1 shadow-md">
-                <Sparkles className="w-4 h-4" /> Más popular
+                <Sparkles className="w-4 h-4" /> Recomendado
               </div>
-
-              <div className="mb-6">
-                <BrainLogo className="w-12 h-12" />
-              </div>
+              <div className="mb-6"><BrainLogo className="w-12 h-12" /></div>
               <h4 className="text-2xl font-bold text-slate-900 mb-2">Premium</h4>
-              <p className="text-slate-500 mb-8">Para educadores profesionales</p>
+              <p className="text-slate-500 mb-8">Para profes que valoran su tiempo</p>
               
-              <div className="mb-8 flex items-baseline gap-2">
-                <span className="text-5xl font-extrabold text-slate-900">4.99</span>
-                <span className="text-slate-500 font-medium text-lg">/mes</span>
+              {/* Precio Dinámico */}
+              <div className="mb-8 h-[60px] flex flex-col justify-center">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-5xl font-extrabold text-slate-900">{isAnnual ? '4,15' : '4,99'}</span>
+                  <span className="text-slate-500 font-medium text-lg">€/mes</span>
+                </div>
+                {isAnnual && (
+                  <span className="text-sm text-slate-500 mt-1">Facturado anualmente (49,90€)</span>
+                )}
               </div>
 
               <div className="space-y-4 mb-10 flex-1">
                 <div className="flex items-center gap-3 text-slate-600 font-medium"><Check className="w-5 h-5 text-[#4F75FF]" /> Generaciones ilimitadas</div>
-                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Biblioteca completa</div>
-                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Exportar en PDF</div>
-                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Edición avanzada</div>
-                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Plantillas exclusivas</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Todo tipo de asignaturas y niveles</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Exportar PDF con Solucionario</div>
               </div>
 
-              <button 
-                onClick={onStart}
-                className="w-full py-4 rounded-xl font-bold text-white bg-[#4F75FF] hover:bg-[#3d5ee6] shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5"
-              >
-                Comenzar ahora
+              <button onClick={onStart} className="w-full py-4 rounded-xl font-bold text-white bg-[#4F75FF] hover:bg-[#3d5ee6] shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5">
+                {isAnnual ? 'Desbloquear Año Premium' : 'Desbloquear Ilimitado'}
               </button>
             </div>
+          </div>
+        </div>
+      </div>
 
+      {/* --- 5. BOTTOM CTA --- */}
+      <div className="py-20 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-slate-900 rounded-[3rem] p-12 md:p-16 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/3 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"></div>
+            <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/3 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl"></div>
+            
+            <div className="relative z-10">
+              <Rocket className="w-16 h-16 text-[#4F75FF] mx-auto mb-6" />
+              <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6 tracking-tight">
+                Únete a la nueva era de educadores.
+              </h2>
+              <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto">
+                No vuelvas a regalar tus fines de semana buscando recursos en internet o maquetando documentos desde cero.
+              </p>
+              <button onClick={onStart} className="px-10 py-5 bg-[#4F75FF] hover:bg-[#3d5ee6] text-white rounded-full font-bold text-xl shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-1">
+                Empezar gratis ahora
+              </button>
+            </div>
           </div>
         </div>
       </div>
