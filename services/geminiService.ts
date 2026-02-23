@@ -22,10 +22,9 @@ export const generateWorksheet = async (params: GenerateParams): Promise<Workshe
   }
 
   try {
-    // ✅ CAMBIO REALIZADO: Usamos "gemini-2.5-flash" tal como aparece en tu panel
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    // --- PROMPT PROFESIONAL OPTIMIZADO V2.0 ---
+    // --- PROMPT PROFESIONAL OPTIMIZADO V2.2 ---
     const prompt = `
 ERES UN PEDAGOGO EXPERTO Y DISEÑADOR EDITORIAL DE MATERIALES EDUCATIVOS.
 
@@ -34,11 +33,11 @@ Tu misión: Crear una ficha educativa de CALIDAD PROFESIONAL lista para imprimir
 ═══════════════════════════════════════════════════════════════════════════════
 📋 DATOS DEL EJERCICIO
 ═══════════════════════════════════════════════════════════════════════════════
-• Asignatura: ${params.subject}
-• Nivel educativo: ${params.level}
-• Tema específico: ${params.topic}
-• Cantidad de ejercicios: ${params.exerciseCount}
-• Instrucciones especiales: ${params.instructions || "Ninguna. Usa tu criterio pedagógico."}
+- Asignatura: ${params.subject}
+- Nivel educativo: ${params.level}
+- Tema específico: ${params.topic}
+- Cantidad de ejercicios: ${params.exerciseCount}
+- Instrucciones especiales: ${params.instructions || "Ninguna. Usa tu criterio pedagógico."}
 
 ═══════════════════════════════════════════════════════════════════════════════
 🎯 PRINCIPIOS PEDAGÓGICOS
@@ -133,18 +132,47 @@ ${!params.instructions?.toLowerCase().includes('sin soluciones') ? `
 </body>
 </html>
 
-INSTRUCCIONES FINALES:
+INSTRUCCIONES FINALES ESTRICTAS:
 1. Solo devuelve HTML puro.
-2. Respeta la cantidad: ${params.exerciseCount}.
-3. Si es matemáticas usa HTML: x<sup>2</sup>, &radic;.
+2. Respeta la cantidad de ejercicios solicitados: ${params.exerciseCount}.
+3. ⚠️ FRACCIONES: NUNCA uses &frac, \\frac, ni ninguna entidad HTML para fracciones.
+   SIEMPRE escribe las fracciones como: numerador/denominador
+   Ejemplos ÚNICOS permitidos: 5/7, 11/12, 3/4, 2/3, 1/2
+   Incumplir esto rompe la aplicación para los alumnos.
     `;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    // Limpieza de seguridad
-    const cleanText = text.replace(/```html/g, '').replace(/```/g, '').trim();
+    // 1. Limpieza de seguridad básica
+    let cleanText = text.replace(/```html/g, '').replace(/```/g, '').trim();
+
+    // 2. FILTRO INFALIBLE V2 - Cubre TODOS los casos
+    // Caso 1: &frac{11}{12} o &frac{3}{4}  → 11/12
+    cleanText = cleanText.replace(/&frac\{(\d+)\}\{(\d+)\};?/g, '$1/$2');
+
+    // Caso 2: &frac57; → 5/7  (un dígito cada uno)
+    cleanText = cleanText.replace(/&frac(\d)(\d);?/g, '$1/$2');
+
+    // Caso 3: &frac9{12} o &frac3{8} → 9/12
+    cleanText = cleanText.replace(/&frac(\d+)\{(\d+)\};?/g, '$1/$2');
+
+    // Caso 4: \\frac{3}{4} (si Gemini usa sintaxis LaTeX) → 3/4
+    cleanText = cleanText.replace(/\\frac\{(\d+)\}\{(\d+)\}/g, '$1/$2');
+
+    // Caso 5: Entidades HTML numéricas de fracciones comunes
+    cleanText = cleanText.replace(/&frac12;/g, '1/2');
+    cleanText = cleanText.replace(/&frac14;/g, '1/4');
+    cleanText = cleanText.replace(/&frac34;/g, '3/4');
+    cleanText = cleanText.replace(/&frac13;/g, '1/3');
+    cleanText = cleanText.replace(/&frac23;/g, '2/3');
+
+    // Caso 6: Cualquier &frac restante no capturado (catch-all)
+    cleanText = cleanText.replace(/&frac[^;]*;?/g, (match) => {
+      console.warn("⚠️ Fracción no procesada detectada:", match);
+      return match;
+    });
 
     return {
       content: cleanText,
@@ -157,18 +185,9 @@ INSTRUCCIONES FINALES:
 
   } catch (error: any) {
     console.error("🔥 ERROR DETALLADO DE GEMINI:", error);
-    
-    // Gestión de errores comunes
-    if (error.message?.includes("429")) {
-      throw new Error("⏳ Has superado el límite diario de Gemini (20/día). Espera a mañana o cambia de cuenta.");
-    }
-    if (error.message?.includes("API key")) {
-      throw new Error("🔑 La API Key no es válida. Revisa tu archivo .env");
-    }
-    if (error.message?.includes("model")) {
-      throw new Error("🤖 El modelo Gemini 2.5 no está disponible. Intenta cambiar a 'gemini-1.5-flash' en el código.");
-    }
-
+    if (error.message?.includes("429")) throw new Error("⏳ Has superado el límite diario de Gemini (20/día). Espera a mañana o cambia de cuenta.");
+    if (error.message?.includes("API key")) throw new Error("🔑 La API Key no es válida. Revisa tu archivo .env");
+    if (error.message?.includes("model")) throw new Error("🤖 El modelo Gemini 2.5 no está disponible. Intenta cambiar a 'gemini-1.5-flash' en el código.");
     throw new Error(`Error de IA: ${error.message || "Inténtalo de nuevo."}`);
   }
 };
