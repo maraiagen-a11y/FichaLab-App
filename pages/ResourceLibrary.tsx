@@ -1,15 +1,15 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase';
-import { Trash2, Download, Eye, X, FileText, Search, Edit3, Save, RotateCcw } from 'lucide-react';
+import { Trash2, Download, Eye, X, FileText, Search, Edit3, Save, RotateCcw, Globe, Lock } from 'lucide-react';
 
 // Importamos el editor
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
-// 1. IMPORTAMOS EL TRADUCTOR DE MARKDOWN
+// Importamos el traductor de Markdown
 import { marked } from 'marked';
 
-// ¡ESTA LÍNEA ES VITAL PARA QUE NO SE ROMPA EL FOLIO!
+// Importamos los estilos del folio A4
 import './Worksheet-preview.css';
 
 export const ResourceLibrary = () => {
@@ -17,10 +17,13 @@ export const ResourceLibrary = () => {
   const [loading, setLoading] = useState(true);
   const [selectedResource, setSelectedResource] = useState<any>(null);
   
-  // --- NUEVOS ESTADOS PARA EDICIÓN ---
+  // Estados para edición
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  
+  // Estado para el botón de hacer público
+  const [isTogglingPublic, setIsTogglingPublic] = useState(false);
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
@@ -46,13 +49,11 @@ export const ResourceLibrary = () => {
     } catch (error) { alert('Error al borrar'); }
   };
 
-  // 3. SELECCIONAR FICHA (Aquí convertimos el Markdown a HTML si es necesario)
+  // 3. SELECCIONAR FICHA (Convierte Markdown a HTML)
   const handleSelectResource = async (res: any) => {
     setSelectedResource(res);
     setIsEditing(false); 
     
-    // Convertimos el contenido a HTML de forma segura antes de editarlo
-    // Si ya viene en HTML (de generaciones antiguas) no pasará nada, pero si es Markdown puro, lo arregla.
     try {
       const htmlContent = await marked.parse(res.content);
       setEditedContent(htmlContent); 
@@ -61,7 +62,7 @@ export const ResourceLibrary = () => {
     }
   };
 
-  // 4. GUARDAR CAMBIOS
+  // 4. GUARDAR CAMBIOS DE TEXTO
   const handleSaveChanges = async () => {
     if (!selectedResource) return;
     setIsSaving(true);
@@ -87,13 +88,39 @@ export const ResourceLibrary = () => {
     }
   };
 
-  // 5. IFRAME MÁGICO (Con traducción de Markdown a HTML incluida)
+  // 5. HACER PÚBLICA O PRIVADA LA FICHA
+  const handleTogglePublic = async () => {
+    if (!selectedResource) return;
+    setIsTogglingPublic(true);
+    const newPublicState = !selectedResource.is_public;
+    try {
+      const { error } = await supabase
+        .from('resources')
+        .update({ is_public: newPublicState })
+        .eq('id', selectedResource.id);
+      
+      if (error) throw error;
+      
+      const updatedResource = { ...selectedResource, is_public: newPublicState };
+      setSelectedResource(updatedResource);
+      setResources(resources.map(r => r.id === selectedResource.id ? updatedResource : r));
+      
+      if (newPublicState) {
+        alert("🌍 ¡Ficha publicada! Ahora otros profes podrán verla en la Comunidad.");
+      }
+    } catch (err) {
+      alert("❌ Error al cambiar la privacidad. Asegúrate de haber ejecutado el comando SQL en Supabase.");
+    } finally {
+      setIsTogglingPublic(false);
+    }
+  };
+
+  // 6. IFRAME MÁGICO (Traduce Markdown a HTML y lo inyecta)
   useEffect(() => {
     const updateIframe = async () => {
       if (selectedResource && !isEditing && iframeRef.current) {
         const doc = iframeRef.current.contentWindow?.document;
         if (doc) { 
-          // Traducimos el contenido crudo a HTML antes de meterlo en el Iframe
           let finalHtml = selectedResource.content;
           try {
              finalHtml = await marked.parse(selectedResource.content);
@@ -101,7 +128,6 @@ export const ResourceLibrary = () => {
              console.error("Error parseando markdown:", e);
           }
 
-          // Inyectamos el HTML en el iframe con estilos básicos para que se vea bien
           doc.open(); 
           doc.write(`
             <html>
@@ -129,7 +155,7 @@ export const ResourceLibrary = () => {
     updateIframe();
   }, [selectedResource, isEditing]); 
 
-  // 6. IMPRIMIR
+  // 7. IMPRIMIR
   const handlePrint = () => {
     if (isEditing) {
         alert("Por favor, guarda los cambios o cancela la edición antes de imprimir.");
@@ -159,8 +185,16 @@ export const ResourceLibrary = () => {
           ) : (
            resources.map((res) => (
             <div key={res.id} onClick={() => handleSelectResource(res)}
-              className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md ${selectedResource?.id === res.id ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500/20' : 'bg-white border-slate-200 hover:border-blue-300'}`}>
-              <h3 className="font-bold text-gray-800 truncate text-sm mb-2">{res.title}</h3>
+              className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md relative ${selectedResource?.id === res.id ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500/20' : 'bg-white border-slate-200 hover:border-blue-300'}`}>
+              
+              {/* Etiqueta de Pública/Privada en la lista */}
+              {res.is_public && (
+                <div className="absolute top-4 right-10 text-green-500 bg-green-50 p-1 rounded-full" title="Pública en la comunidad">
+                  <Globe size={14} />
+                </div>
+              )}
+
+              <h3 className="font-bold text-gray-800 truncate text-sm mb-2 pr-8">{res.title}</h3>
               <div className="flex justify-between items-center mt-2">
                 <span className="text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 px-2 py-1 rounded-md">
                   {res.subject || 'General'}
@@ -213,9 +247,27 @@ export const ResourceLibrary = () => {
                   </>
                 ) : (
                   <>
+                    {/* BOTÓN MÁGICO DE COMUNIDAD */}
+                    <button 
+                      onClick={handleTogglePublic}
+                      disabled={isTogglingPublic}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold border transition-colors ${
+                        selectedResource.is_public 
+                        ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' 
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
+                      title={selectedResource.is_public ? "Quitar de la comunidad" : "Compartir con otros profes"}
+                    >
+                      {selectedResource.is_public ? <Globe size={16} className="text-green-600"/> : <Lock size={16}/>}
+                      <span className="hidden lg:inline">
+                        {selectedResource.is_public ? 'Pública' : 'Hacer Pública'}
+                      </span>
+                    </button>
+
+                    <div className="w-px h-6 bg-slate-200 mx-1 hidden md:block"></div>
+
                     <button 
                       onClick={async () => { 
-                        // Aseguramos que el editor recibe HTML y no Markdown
                         try {
                           const html = await marked.parse(selectedResource.content);
                           setEditedContent(html); 
@@ -229,11 +281,9 @@ export const ResourceLibrary = () => {
                       <Edit3 size={16} className="stroke-[2.5]"/> Editar
                     </button>
                     
-                    <div className="hidden md:block w-px h-6 bg-slate-200 mx-1"></div>
-                    
                     <button 
                       onClick={handlePrint} 
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-md text-sm font-bold transition-all active:scale-95"
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-900 shadow-md text-sm font-bold transition-all active:scale-95 hidden sm:flex"
                     >
                       <Download size={16} className="stroke-[2.5]"/> <span className="hidden sm:inline">Descargar PDF</span>
                     </button>
