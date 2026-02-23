@@ -6,8 +6,12 @@ import { Trash2, Download, Eye, X, FileText, Search, Edit3, Save, RotateCcw } fr
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
 
+// 1. IMPORTAMOS EL TRADUCTOR DE MARKDOWN
+import { marked } from 'marked';
+
 // ¡ESTA LÍNEA ES VITAL PARA QUE NO SE ROMPA EL FOLIO!
 import './Worksheet-preview.css';
+
 export const ResourceLibrary = () => {
   const [resources, setResources] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -42,11 +46,19 @@ export const ResourceLibrary = () => {
     } catch (error) { alert('Error al borrar'); }
   };
 
-  // 3. SELECCIONAR FICHA
-  const handleSelectResource = (res: any) => {
+  // 3. SELECCIONAR FICHA (Aquí convertimos el Markdown a HTML si es necesario)
+  const handleSelectResource = async (res: any) => {
     setSelectedResource(res);
     setIsEditing(false); 
-    setEditedContent(res.content); 
+    
+    // Convertimos el contenido a HTML de forma segura antes de editarlo
+    // Si ya viene en HTML (de generaciones antiguas) no pasará nada, pero si es Markdown puro, lo arregla.
+    try {
+      const htmlContent = await marked.parse(res.content);
+      setEditedContent(htmlContent); 
+    } catch (e) {
+      setEditedContent(res.content);
+    }
   };
 
   // 4. GUARDAR CAMBIOS
@@ -75,16 +87,46 @@ export const ResourceLibrary = () => {
     }
   };
 
-  // 5. IFRAME MAGICO 
+  // 5. IFRAME MÁGICO (Con traducción de Markdown a HTML incluida)
   useEffect(() => {
-    if (selectedResource && !isEditing && iframeRef.current) {
-      const doc = iframeRef.current.contentWindow?.document;
-      if (doc) { 
-        doc.open(); 
-        doc.write(selectedResource.content); 
-        doc.close(); 
+    const updateIframe = async () => {
+      if (selectedResource && !isEditing && iframeRef.current) {
+        const doc = iframeRef.current.contentWindow?.document;
+        if (doc) { 
+          // Traducimos el contenido crudo a HTML antes de meterlo en el Iframe
+          let finalHtml = selectedResource.content;
+          try {
+             finalHtml = await marked.parse(selectedResource.content);
+          } catch(e) {
+             console.error("Error parseando markdown:", e);
+          }
+
+          // Inyectamos el HTML en el iframe con estilos básicos para que se vea bien
+          doc.open(); 
+          doc.write(`
+            <html>
+              <head>
+                <style>
+                  body { font-family: sans-serif; padding: 20mm; line-height: 1.6; color: #333; }
+                  h1, h2, h3 { color: #1e293b; margin-top: 1.5em; margin-bottom: 0.5em; }
+                  h1 { border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+                  ul, ol { margin-bottom: 1.5em; padding-left: 20px; }
+                  li { margin-bottom: 0.5em; }
+                  strong { color: #0f172a; }
+                  p { margin-bottom: 1em; }
+                </style>
+              </head>
+              <body>
+                ${finalHtml}
+              </body>
+            </html>
+          `); 
+          doc.close(); 
+        }
       }
-    }
+    };
+    
+    updateIframe();
   }, [selectedResource, isEditing]); 
 
   // 6. IMPRIMIR
@@ -172,7 +214,16 @@ export const ResourceLibrary = () => {
                 ) : (
                   <>
                     <button 
-                      onClick={() => { setEditedContent(selectedResource.content); setIsEditing(true); }}
+                      onClick={async () => { 
+                        // Aseguramos que el editor recibe HTML y no Markdown
+                        try {
+                          const html = await marked.parse(selectedResource.content);
+                          setEditedContent(html); 
+                        } catch(e) {
+                          setEditedContent(selectedResource.content);
+                        }
+                        setIsEditing(true); 
+                      }}
                       className="flex items-center gap-2 px-4 py-2 border border-blue-200 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-bold transition-colors"
                     >
                       <Edit3 size={16} className="stroke-[2.5]"/> Editar
@@ -199,7 +250,7 @@ export const ResourceLibrary = () => {
               </div>
             </div>
             
-            {/* CONTENEDOR PRINCIPAL (Usa las clases del worksheet-preview.css) */}
+            {/* CONTENEDOR PRINCIPAL */}
             <div className="flex-1 overflow-y-auto relative p-0 print:p-0 print:overflow-visible custom-scrollbar bg-[#0f172a]">
               <div className="preview-container">
                 <div className="paper-a4">
