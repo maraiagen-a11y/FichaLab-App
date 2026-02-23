@@ -47,7 +47,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
         </div>
       </nav>
 
-      {/* --- 1. HERO SECTION --- */}
+      {/* --- 1. HERO SECTION REDISEÑADO --- */}
       <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50/80 via-[#F8FAFC] to-[#F8FAFC]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -65,9 +65,32 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
                 </span>
               </h1>
               
-              <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-lg leading-relaxed">
-                Dile a la IA qué necesitas o <strong>descarga al instante material creado por otros profesores</strong> en nuestra comunidad.
+              <p className="text-lg md:text-xl text-slate-500 mb-8 max-w-lg leading-relaxed">
+                El primer asistente todo en uno para profesores. Ahorra horas de trabajo cada semana con nuestras dos herramientas principales:
               </p>
+
+              {/* LAS DOS VÍAS (TARJETAS EN EL HERO) */}
+              <div className="grid grid-cols-2 gap-4 mb-10 max-w-lg">
+                <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex items-start gap-3 hover:border-blue-300 transition-colors">
+                  <div className="bg-blue-50 p-2.5 rounded-xl text-[#4F75FF] shrink-0">
+                    <Brain className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">Generador IA</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">Fichas a medida en 5s</p>
+                  </div>
+                </div>
+                
+                <div onClick={onExplore} className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex items-start gap-3 hover:border-green-300 transition-colors cursor-pointer group">
+                  <div className="bg-emerald-50 p-2.5 rounded-xl text-emerald-500 shrink-0 group-hover:scale-110 transition-transform">
+                    <Globe className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm">Comunidad</h4>
+                    <p className="text-xs text-slate-500 mt-0.5">PDFs listos para usar</p>
+                  </div>
+                </div>
+              </div>
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <button onClick={onStart} className="px-8 py-4 bg-[#4F75FF] hover:bg-[#3d5ee6] text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
@@ -167,7 +190,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
 
       {/* --- NUEVA SECCIÓN: LA COMUNIDAD --- */}
       <div className="py-24 bg-slate-900 overflow-hidden relative">
-        {/* Efectos de luz de fondo */}
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-[100px]"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px]"></div>
 
@@ -207,9 +229,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
               </button>
             </div>
 
-            {/* Mockup visual de las tarjetas de la comunidad */}
             <div className="relative h-[400px] hidden lg:block">
-              {/* Tarjeta 1 */}
               <div className="absolute top-0 right-10 w-80 bg-white rounded-2xl p-6 shadow-2xl transform rotate-6 hover:rotate-0 transition-transform duration-500 z-10">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider bg-purple-100 text-purple-600 px-2 py-1 rounded-md mb-3 inline-block">Historia</span>
                 <h4 className="font-bold text-slate-900 text-lg mb-2">Revolución Francesa (Escape Room)</h4>
@@ -217,7 +237,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
                 <div className="h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 text-sm font-bold"><Download className="w-4 h-4 mr-2"/> Descargar PDF</div>
               </div>
               
-              {/* Tarjeta 2 */}
               <div className="absolute top-20 left-0 w-80 bg-white rounded-2xl p-6 shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500 z-20 border border-blue-100">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider bg-orange-100 text-orange-600 px-2 py-1 rounded-md mb-3 inline-block">Primaria</span>
                 <h4 className="font-bold text-slate-900 text-lg mb-2">Sumas con Llevadas (Pokémon)</h4>
@@ -225,7 +244,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
                 <div className="h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-sm font-bold border border-blue-100"><Download className="w-4 h-4 mr-2"/> Descargar PDF</div>
               </div>
 
-              {/* Tarjeta 3 */}
               <div className="absolute bottom-0 right-20 w-80 bg-white rounded-2xl p-6 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500 z-30">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-600 px-2 py-1 rounded-md mb-3 inline-block">Biología</span>
                 <h4 className="font-bold text-slate-900 text-lg mb-2">Partes de la Célula Vegetal</h4>
