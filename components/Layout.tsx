@@ -9,7 +9,8 @@ import {
   X, 
   LogOut,
   User as UserIcon,
-  Sparkles
+  Sparkles,
+  Globe // <-- IMPORTAMOS EL ICONO DEL GLOBO
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -20,7 +21,7 @@ interface LayoutProps {
   onNavigate: (page: string) => void;
 }
 
-// --- LOGO INTERACTIVO (Igual que en la Landing Page) ---
+// --- LOGO INTERACTIVO ---
 const BrainLogo = () => (
   <div className="relative group cursor-pointer">
     <div className="absolute -inset-1 bg-gradient-to-r from-[#4F75FF] to-[#38bdf8] rounded-full blur opacity-30 group-hover:opacity-60 transition duration-300"></div>
@@ -40,9 +41,10 @@ export const Layout: React.FC<LayoutProps> = ({
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Definición del menú
+  // Definición del menú con la Comunidad añadida
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'gallery', label: 'Comunidad', icon: Globe }, // <-- AÑADIDA LA GALERÍA AQUÍ
     { id: 'resources', label: 'Biblioteca', icon: BookOpen },
     { id: 'generator', label: 'Generador IA', icon: Brain },
     { id: 'pricing', label: 'Planes y Precios', icon: CreditCard },
@@ -131,7 +133,6 @@ export const Layout: React.FC<LayoutProps> = ({
       </aside>
 
       {/* === CONTENIDO PRINCIPAL === */}
-      {/* Ya no limitamos el ancho aquí, dejamos que cada página (Dashboard, Generador, etc) gestione su propio padding y ancho para no romper los diseños */}
       <main className="flex-1 overflow-y-auto h-screen bg-[#F8FAFC] relative w-full flex flex-col">
         {children}
       </main>
