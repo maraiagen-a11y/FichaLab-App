@@ -13,6 +13,7 @@ import { WorksheetGenerator } from './pages/WorksheetGenerator';
 import { Pricing } from './pages/Pricing';
 import { PaymentSuccess } from './pages/PaymentSuccess'; 
 import { OnboardingWizard } from './components/OnboardingWizard'; 
+import { Gallery } from './pages/Gallery'; // <-- 1. IMPORTAMOS LA GALERÍA MÁGICA
 
 // --- DEFINIMOS EL USUARIO INVITADO ---
 const GUEST_USER: User = {
@@ -28,7 +29,6 @@ const GUEST_USER: User = {
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   
-  // 1. CORRECCIÓN APLICADA: Detectamos la URL exacta de Stripe (/PaymentSuccess)
   const [currentPage, setCurrentPage] = useState(
     window.location.pathname === '/PaymentSuccess' ? 'payment_success' : 'landing'
   );
@@ -37,7 +37,6 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);  
   const [loading, setLoading] = useState(true);
 
-  // 2. EFECTO PARA CHEQUEAR SESIÓN
   useEffect(() => {
     checkSession();
   }, []);
@@ -94,7 +93,6 @@ const App: React.FC = () => {
         });
         setIsAuthenticated(true);
         
-        // 3. CORRECCIÓN APLICADA: Solo vamos al Dashboard si NO estamos en la página de éxito
         if (window.location.pathname !== '/PaymentSuccess') {
            if (loading) setCurrentPage('dashboard');
         }
@@ -133,7 +131,7 @@ const App: React.FC = () => {
         onStart={() => setCurrentPage('login_required')} 
         onExplore={() => {
           setUser(GUEST_USER); 
-          setCurrentPage('resources');
+          setCurrentPage('gallery'); // <-- 2. AHORA "EJEMPLOS" LLEVA A LA COMUNIDAD
         }}
       />
     );
@@ -160,6 +158,9 @@ const App: React.FC = () => {
       case 'dashboard': 
         return <Dashboard user={user} onNavigate={setCurrentPage} />;
       
+      case 'gallery': // <-- 3. AÑADIMOS LA RUTA DE LA GALERÍA
+        return <Gallery />;
+
       case 'resources': 
         return <ResourceLibrary />;
       
