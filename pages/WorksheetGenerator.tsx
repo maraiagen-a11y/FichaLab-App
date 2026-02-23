@@ -3,7 +3,7 @@ import { generateWorksheet } from "../services/geminiService";
 import { Subject, EducationLevel, User } from "../types"; 
 import { supabase } from "../lib/supabase"; 
 import { 
-  Download, FileText, Copy, RefreshCw, Settings, Save, Crown, AlertCircle 
+  Download, FileText, Copy, RefreshCw, Settings, Save, Crown, AlertCircle, Sparkles, BookOpen, Eye, Table 
 } from "lucide-react"; 
 
 interface WorksheetGeneratorProps {
@@ -12,13 +12,18 @@ interface WorksheetGeneratorProps {
 }
 
 export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, onWorksheetGenerated }) => {
-  // --- ESTADOS ---
+  // --- ESTADOS BÁSICOS ---
   const [subject, setSubject] = useState<Subject>(Object.values(Subject)[0] as Subject);
   const [level, setLevel] = useState<EducationLevel>(Object.values(EducationLevel)[0] as EducationLevel);
   const [topic, setTopic] = useState("");
   const [exerciseCount, setExerciseCount] = useState(5);
   const [instructions, setInstructions] = useState("");
   
+  // --- ESTADOS PREMIUM (Los Superpoderes) ---
+  const [lomloe, setLomloe] = useState(false);
+  const [dyslexia, setDyslexia] = useState(false);
+  const [rubric, setRubric] = useState(false);
+
   const [worksheetContent, setWorksheetContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -56,8 +61,30 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
 
     setIsLoading(true); setError(""); setWorksheetContent("");
 
+    // LA MAGIA: Construimos las instrucciones finales ocultas
+    let finalInstructions = instructions;
+    
+    if (isPremium) {
+      if (lomloe) {
+        finalInstructions += "\n\n[INSTRUCCIÓN OBLIGATORIA DEL SISTEMA]: Al final del documento, incluye una sección titulada 'Justificación Curricular (LOMLOE)' con una tabla profesional que detalle los Saberes Básicos, Competencias Específicas y Criterios de Evaluación trabajados en esta ficha.";
+      }
+      if (dyslexia) {
+        finalInstructions += "\n\n[INSTRUCCIÓN OBLIGATORIA DEL SISTEMA]: Adapta estrictamente TODO el texto y ejercicios usando Diseño Universal para el Aprendizaje (DUA) para alumnos con dislexia. Usa frases muy cortas, vocabulario transparente, resalta en negrita las palabras clave y da las instrucciones paso a paso de forma muy clara.";
+      }
+      if (rubric) {
+        finalInstructions += "\n\n[INSTRUCCIÓN OBLIGATORIA DEL SISTEMA]: Al final de la hoja de soluciones, añade una 'Rúbrica de Evaluación' en formato tabla detallando exactamente cómo debe puntuar el profesor cada ejercicio del 0 al 10.";
+      }
+    }
+
     try {
-      const result = await generateWorksheet({ subject, level, topic, exerciseCount, instructions });
+      const result = await generateWorksheet({ 
+        subject, 
+        level, 
+        topic, 
+        exerciseCount, 
+        instructions: finalInstructions // Pasamos el prompt "vitaminado"
+      });
+      
       setWorksheetContent(result.content);
 
       if (user && user.id !== 'guest') {
@@ -133,7 +160,7 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
       
       {/* === PANEL IZQUIERDO: CONFIGURACIÓN === */}
       <div className="w-[380px] md:w-[400px] bg-white border-r border-gray-200 flex flex-col z-10 shadow-xl print:hidden shrink-0">
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-6 border-b border-gray-100 bg-white sticky top-0 z-20">
           <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
             <Settings className="text-blue-600 w-5 h-5" /> Configuración
           </h2>
@@ -145,54 +172,117 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-5">
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Asignatura</label>
-            <select value={subject} onChange={(e) => setSubject(e.target.value as Subject)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium text-gray-700">
-              {Object.values(Subject).map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Nivel</label>
-            <select value={level} onChange={(e) => setLevel(e.target.value as EducationLevel)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium text-gray-700">
-              {Object.values(EducationLevel).map(l => <option key={l} value={l}>{l}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Tema Principal</label>
-            <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ej: Ecuaciones de segundo grado" className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm text-gray-700 placeholder:text-gray-400"/>
-          </div>
-
-          <div>
-            <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase mb-2">
-              <span>Cantidad de ejercicios</span>
-              <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{exerciseCount}</span>
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar pb-24">
+          
+          {/* BLOQUE BÁSICO */}
+          <div className="space-y-5">
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Asignatura</label>
+              <select value={subject} onChange={(e) => setSubject(e.target.value as Subject)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium text-gray-700">
+                {Object.values(Subject).map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
             </div>
-            <input type="range" min="1" max="15" value={exerciseCount} onChange={(e) => setExerciseCount(Number(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"/>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Nivel</label>
+              <select value={level} onChange={(e) => setLevel(e.target.value as EducationLevel)} className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm font-medium text-gray-700">
+                {Object.values(EducationLevel).map(l => <option key={l} value={l}>{l}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Tema Principal</label>
+              <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="Ej: Ecuaciones de segundo grado" className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm text-gray-700 placeholder:text-gray-400"/>
+            </div>
+
+            <div>
+              <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase mb-2">
+                <span>Cantidad de ejercicios</span>
+                <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{exerciseCount}</span>
+              </div>
+              <input type="range" min="1" max="15" value={exerciseCount} onChange={(e) => setExerciseCount(Number(e.target.value))} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"/>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Instrucciones Extra (Opcional)</label>
+              <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={3} placeholder="Ej: Añade un espacio grande para responder, o haz que la temática sea Harry Potter..." className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm text-gray-700 resize-none placeholder:text-gray-400"/>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Instrucciones Extra (Opcional)</label>
-            <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={3} placeholder="Ej: Añade un espacio grande para responder..." className="w-full p-3 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-sm text-gray-700 resize-none placeholder:text-gray-400"/>
+          {/* BLOQUE PREMIUM (SUPERPODERES) */}
+          <div className="border-t border-gray-200 pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xs font-extrabold text-slate-800 uppercase flex items-center gap-1.5 tracking-wider">
+                <Sparkles size={16} className="text-[#4F75FF]" /> Superpoderes IA
+              </h3>
+              {!isPremium && <span className="bg-orange-100 text-orange-700 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">Premium</span>}
+            </div>
+
+            <div className={`space-y-3 ${!isPremium ? 'opacity-70 grayscale-[30%] pointer-events-none' : ''}`}>
+              
+              {/* LOMLOE */}
+              <label className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-all ${lomloe ? 'border-[#4F75FF] bg-blue-50/50 ring-1 ring-[#4F75FF]/20' : 'border-gray-200 hover:border-blue-200 bg-white'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${lomloe ? 'bg-[#4F75FF] text-white' : 'bg-slate-100 text-slate-500'}`}><BookOpen size={18}/></div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">Justificación LOMLOE</p>
+                    <p className="text-[11px] text-slate-500 leading-tight mt-0.5">Añade tabla de saberes y competencias</p>
+                  </div>
+                </div>
+                <div className={`w-10 h-6 rounded-full p-1 transition-colors relative ${lomloe ? 'bg-[#4F75FF]' : 'bg-slate-200'}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full transition-transform absolute ${lomloe ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                </div>
+                <input type="checkbox" checked={lomloe} onChange={(e) => setLomloe(e.target.checked)} className="hidden" />
+              </label>
+
+              {/* DISLEXIA */}
+              <label className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-all ${dyslexia ? 'border-[#4F75FF] bg-blue-50/50 ring-1 ring-[#4F75FF]/20' : 'border-gray-200 hover:border-blue-200 bg-white'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${dyslexia ? 'bg-[#4F75FF] text-white' : 'bg-slate-100 text-slate-500'}`}><Eye size={18}/></div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">Adaptar a Dislexia</p>
+                    <p className="text-[11px] text-slate-500 leading-tight mt-0.5">Formato DUA claro y paso a paso</p>
+                  </div>
+                </div>
+                <div className={`w-10 h-6 rounded-full p-1 transition-colors relative ${dyslexia ? 'bg-[#4F75FF]' : 'bg-slate-200'}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full transition-transform absolute ${dyslexia ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                </div>
+                <input type="checkbox" checked={dyslexia} onChange={(e) => setDyslexia(e.target.checked)} className="hidden" />
+              </label>
+
+              {/* RÚBRICA */}
+              <label className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-all ${rubric ? 'border-[#4F75FF] bg-blue-50/50 ring-1 ring-[#4F75FF]/20' : 'border-gray-200 hover:border-blue-200 bg-white'}`}>
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-lg ${rubric ? 'bg-[#4F75FF] text-white' : 'bg-slate-100 text-slate-500'}`}><Table size={18}/></div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-800">Rúbrica de Evaluación</p>
+                    <p className="text-[11px] text-slate-500 leading-tight mt-0.5">Genera tabla de puntuaciones 0-10</p>
+                  </div>
+                </div>
+                <div className={`w-10 h-6 rounded-full p-1 transition-colors relative ${rubric ? 'bg-[#4F75FF]' : 'bg-slate-200'}`}>
+                  <div className={`w-4 h-4 bg-white rounded-full transition-transform absolute ${rubric ? 'translate-x-4' : 'translate-x-0'}`}></div>
+                </div>
+                <input type="checkbox" checked={rubric} onChange={(e) => setRubric(e.target.checked)} className="hidden" />
+              </label>
+
+            </div>
           </div>
 
           <button 
             onClick={handleGenerate} 
             disabled={isLoading || !topic || isLimitReached} 
-            className={`w-full py-3.5 mt-4 text-white rounded-xl font-bold shadow-lg transition-all flex justify-center items-center gap-2 active:scale-[0.98] ${
+            className={`w-full py-4 mt-6 text-white rounded-xl font-bold shadow-lg transition-all flex justify-center items-center gap-2 active:scale-[0.98] ${
               isLimitReached 
                 ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' 
                 : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/20 hover:shadow-blue-600/40'
             }`}
           >
             {isLoading ? (
-              <><div className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"/> Diseñando Ficha...</>
+              <><div className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"/> Creando Magia...</>
             ) : isLimitReached ? (
               <><Crown size={20} /> Límite Alcanzado</>
             ) : (
-              <><RefreshCw size={20} className="stroke-[2.5]" /> Generar Ficha</>
+              <><Sparkles size={20} className="stroke-[2.5]" /> Generar Ficha</>
             )}
           </button>
           
@@ -262,13 +352,12 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
             </div>
           )}
 
-          {/* EL FOLIO A4 (Visible solo cuando hay contenido) */}
+          {/* EL FOLIO A4 */}
           <div className={`w-full max-w-[800px] bg-white shadow-2xl transition-all duration-500 origin-top print:shadow-none print:max-w-none ${worksheetContent && !isLoading ? 'opacity-100 scale-100 min-h-[1131px]' : 'opacity-0 scale-95 hidden'}`}>
              <iframe 
                ref={iframeRef}
                className="w-full h-full min-h-[1131px] print:min-h-0"
                title="Vista Previa Ficha"
-               // sandbox="allow-same-origin allow-scripts" // Opcional por seguridad
              />
           </div>
 
@@ -279,7 +368,7 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
 }
 
 // Pequeño componente extra solo visual para la carga
-const Sparkles = ({ size, className }: { size: number, className: string }) => (
+const SparklesIcon = ({ size, className }: { size: number, className: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d="M12 3v18M3 12h18M18 6l-12 12M6 6l12 12" />
   </svg>
