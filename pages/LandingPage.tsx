@@ -23,7 +23,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
   return (
     <div className="min-h-screen bg-[#F8FAFC] font-sans text-slate-900 overflow-x-hidden">
       
-      {/* --- NAVBAR --- */}
+      {/* --- NAVBAR REDISEÑADO --- */}
       <nav className="fixed w-full z-50 bg-white/80 backdrop-blur-md border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
@@ -31,10 +31,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
               <BrainLogo className="w-10 h-10" />
               <span className="font-extrabold text-2xl tracking-tight text-slate-900">FichaLab</span>
             </div>
+            
+            {/* AQUÍ ESTÁN LAS OPCIONES MOVIDAS ARRIBA */}
             <div className="hidden md:flex items-center gap-8 text-slate-500 font-medium">
-              <span className="hover:text-[#4F75FF] cursor-pointer transition-colors flex items-center gap-2 font-bold"><FileText size={18}/> Inicio</span>
-              <span onClick={onExplore} className="hover:text-[#4F75FF] cursor-pointer transition-colors flex items-center gap-2 font-bold"><Globe size={18}/> Comunidad</span>
+              <span className="hover:text-[#4F75FF] cursor-pointer transition-colors flex items-center gap-2 font-bold">
+                <FileText size={18}/> Inicio
+              </span>
+              <span onClick={onStart} className="hover:text-[#4F75FF] cursor-pointer transition-colors flex items-center gap-2 font-bold">
+                <Brain size={18}/> Generador IA
+              </span>
+              <span onClick={onExplore} className="hover:text-[#4F75FF] cursor-pointer transition-colors flex items-center gap-2 font-bold">
+                <Globe size={18}/> Comunidad
+              </span>
             </div>
+
             <div className="flex items-center gap-4">
               <button onClick={onStart} className="hidden md:block text-slate-600 hover:text-slate-900 font-bold transition-colors">
                 Iniciar sesión
@@ -47,7 +57,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
         </div>
       </nav>
 
-      {/* --- 1. HERO SECTION REDISEÑADO --- */}
+      {/* --- 1. HERO SECTION LIMPIO --- */}
       <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50/80 via-[#F8FAFC] to-[#F8FAFC]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -65,32 +75,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
                 </span>
               </h1>
               
-              <p className="text-lg md:text-xl text-slate-500 mb-8 max-w-lg leading-relaxed">
-                El primer asistente todo en uno para profesores. Ahorra horas de trabajo cada semana con nuestras dos herramientas principales:
+              <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-lg leading-relaxed">
+                El primer asistente todo en uno para profesores. Dile a la IA qué necesitas o <strong>descarga al instante material creado por otros profesores</strong> en nuestra comunidad.
               </p>
-
-              {/* LAS DOS VÍAS (TARJETAS EN EL HERO) */}
-              <div className="grid grid-cols-2 gap-4 mb-10 max-w-lg">
-                <div className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex items-start gap-3 hover:border-blue-300 transition-colors">
-                  <div className="bg-blue-50 p-2.5 rounded-xl text-[#4F75FF] shrink-0">
-                    <Brain className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm">Generador IA</h4>
-                    <p className="text-xs text-slate-500 mt-0.5">Fichas a medida en 5s</p>
-                  </div>
-                </div>
-                
-                <div onClick={onExplore} className="bg-white border border-slate-200 p-4 rounded-2xl shadow-sm flex items-start gap-3 hover:border-green-300 transition-colors cursor-pointer group">
-                  <div className="bg-emerald-50 p-2.5 rounded-xl text-emerald-500 shrink-0 group-hover:scale-110 transition-transform">
-                    <Globe className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm">Comunidad</h4>
-                    <p className="text-xs text-slate-500 mt-0.5">PDFs listos para usar</p>
-                  </div>
-                </div>
-              </div>
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <button onClick={onStart} className="px-8 py-4 bg-[#4F75FF] hover:bg-[#3d5ee6] text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
