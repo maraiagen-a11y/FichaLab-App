@@ -27,15 +27,34 @@ export const ResourceLibrary = () => {
 
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  // 1. CARGAR FICHAS
+  // 1. CARGAR SOLO LAS FICHAS DEL USUARIO ACTUAL
   useEffect(() => { fetchResources(); }, []);
 
   const fetchResources = async () => {
     try {
-      const { data, error } = await supabase.from('resources').select('*').order('created_at', { ascending: false });
+      // Primero, descubrimos quién es el usuario que está navegando
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.user) {
+        setResources([]);
+        setLoading(false);
+        return;
+      }
+
+      // Luego, pedimos SOLO sus fichas (El candado 🔒)
+      const { data, error } = await supabase
+        .from('resources')
+        .select('*')
+        .eq('user_id', session.user.id) 
+        .order('created_at', { ascending: false });
+        
       if (error) throw error;
       setResources(data || []);
-    } catch (error) { console.error('Error:', error); } finally { setLoading(false); }
+    } catch (error) { 
+      console.error('Error:', error); 
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   // 2. BORRAR
@@ -132,6 +151,14 @@ export const ResourceLibrary = () => {
           doc.write(`
             <html>
               <head>
+                <script>
+                  window.MathJax = {
+                    tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] },
+                    svg: { fontCache: 'global' }
+                  };
+                </script>
+                <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
                 <style>
                   body { font-family: sans-serif; padding: 20mm; line-height: 1.6; color: #333; }
                   h1, h2, h3 { color: #1e293b; margin-top: 1.5em; margin-bottom: 0.5em; }
@@ -185,20 +212,23 @@ export const ResourceLibrary = () => {
           ) : (
            resources.map((res) => (
             <div key={res.id} onClick={() => handleSelectResource(res)}
-              className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md relative ${selectedResource?.id === res.id ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500/20' : 'bg-white border-slate-200 hover:border-blue-300'}`}>
+              className={`p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md relative flex flex-col ${selectedResource?.id === res.id ? 'border-blue-500 bg-blue-50/50 ring-1 ring-blue-500/20' : 'bg-white border-slate-200 hover:border-blue-300'}`}>
               
-              {/* Etiqueta de Pública/Privada en la lista */}
-              {res.is_public && (
-                <div className="absolute top-4 right-10 text-green-500 bg-green-50 p-1 rounded-full" title="Pública en la comunidad">
-                  <Globe size={14} />
-                </div>
-              )}
-
-              <h3 className="font-bold text-gray-800 truncate text-sm mb-2 pr-8">{res.title}</h3>
-              <div className="flex justify-between items-center mt-2">
+              <div className="flex justify-between items-start mb-2">
                 <span className="text-[10px] font-bold uppercase tracking-wide bg-slate-100 text-slate-600 px-2 py-1 rounded-md">
                   {res.subject || 'General'}
                 </span>
+                
+                {res.is_public && (
+                  <div className="text-green-500 bg-green-50 p-1 rounded-full" title="Pública en la comunidad">
+                    <Globe size={14} />
+                  </div>
+                )}
+              </div>
+
+              <h3 className="font-bold text-gray-800 truncate text-sm mb-2">{res.title}</h3>
+              
+              <div className="flex justify-end mt-auto pt-2 border-t border-slate-100">
                 <button 
                   onClick={(e) => handleDelete(res.id, e)} 
                   className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"

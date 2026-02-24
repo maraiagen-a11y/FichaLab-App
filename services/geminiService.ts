@@ -24,7 +24,7 @@ export const generateWorksheet = async (params: GenerateParams): Promise<Workshe
   try {
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-    // --- PROMPT PROFESIONAL OPTIMIZADO V2.2 ---
+    // --- PROMPT PROFESIONAL OPTIMIZADO V4.0 (BLINDADO) ---
     const prompt = `
 ERES UN PEDAGOGO EXPERTO Y DISEÑADOR EDITORIAL DE MATERIALES EDUCATIVOS.
 
@@ -43,22 +43,8 @@ Tu misión: Crear una ficha educativa de CALIDAD PROFESIONAL lista para imprimir
 🎯 PRINCIPIOS PEDAGÓGICOS
 ═══════════════════════════════════════════════════════════════════════════════
 
-1. PROGRESIÓN DE DIFICULTAD:
-   - Empieza con ejercicios sencillos (30%)
-   - Continúa con nivel medio (50%)
-   - Termina con ejercicios desafiantes (20%)
-
-2. VARIEDAD DE TIPOS (OBLIGATORIO):
-   - Opción múltiple (A/B/C/D)
-   - Verdadero/Falso con justificación
-   - Completar huecos
-   - Desarrollo corto
-   - Problemas prácticos
-
-3. FORMATO DE RESPUESTA:
-   - Checkbox □ para test
-   - Líneas punteadas para escribir
-   - Cuadros en blanco para problemas
+1. PROGRESIÓN DE DIFICULTAD: Empieza fácil, sube a medio, termina con un desafío.
+2. VARIEDAD DE TIPOS: Usa Opción múltiple, Verdadero/Falso, Completar huecos y Desarrollo.
 
 ═══════════════════════════════════════════════════════════════════════════════
 🎨 FORMATO VISUAL (HTML EXCLUSIVO - NO MARKDOWN)
@@ -70,6 +56,15 @@ ESTRUCTURA OBLIGATORIA (Copia este HTML exacto):
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
   <style>
     @media print {
       body { margin: 0; padding: 2cm; }
@@ -78,7 +73,7 @@ ESTRUCTURA OBLIGATORIA (Copia este HTML exacto):
     }
     body {
       font-family: 'Georgia', 'Times New Roman', serif;
-      line-height: 1.5;
+      line-height: 1.6;
       color: #111827;
       max-width: 210mm;
       margin: 0 auto;
@@ -91,12 +86,8 @@ ESTRUCTURA OBLIGATORIA (Copia este HTML exacto):
     .theory-box { background: #eff6ff; border-left: 5px solid #3b82f6; padding: 15px; margin-bottom: 30px; border-radius: 4px; }
     .exercise { margin-bottom: 40px; page-break-inside: avoid; }
     .exercise-title { font-weight: bold; font-size: 16px; margin-bottom: 10px; }
-    .answer-lines { 
-      background: repeating-linear-gradient(transparent, transparent 29px, #e5e7eb 29px, #e5e7eb 30px);
-      min-height: 80px; 
-      margin-top: 10px;
-    }
-    .options { margin-left: 20px; }
+    .options { margin-left: 20px; list-style-type: none; padding-left: 0; }
+    .options li { margin-bottom: 8px; }
     .solutions { margin-top: 60px; border-top: 2px dashed #9ca3af; padding-top: 30px; }
   </style>
 </head>
@@ -133,12 +124,11 @@ ${!params.instructions?.toLowerCase().includes('sin soluciones') ? `
 </html>
 
 INSTRUCCIONES FINALES ESTRICTAS:
-1. Solo devuelve HTML puro.
+1. Solo devuelve HTML puro. ¡ESTÁ TERMINANTEMENTE PROHIBIDO USAR MARKDOWN! No uses asteriscos (**negrita**) para resaltar texto. Usa SIEMPRE etiquetas HTML como <strong>texto</strong>.
 2. Respeta la cantidad de ejercicios solicitados: ${params.exerciseCount}.
-3. ⚠️ FRACCIONES: NUNCA uses &frac, \\frac, ni ninguna entidad HTML para fracciones.
-   SIEMPRE escribe las fracciones como: numerador/denominador
-   Ejemplos ÚNICOS permitidos: 5/7, 11/12, 3/4, 2/3, 1/2
-   Incumplir esto rompe la aplicación para los alumnos.
+3. 🧮 REGLA OBLIGATORIA PARA MATEMÁTICAS: Tienes integrado el motor MathJax. Para CUALQUIER fórmula o fracción, DEBES usar sintaxis LaTeX encerrada entre signos de dólar ($). 
+   - Ejemplo de fracción: $\\frac{3}{4}$
+   ¡PROHIBIDO usar entidades HTML como &frac o símbolos raros! Usa SIEMPRE la sintaxis de LaTeX con los signos de dólar.
     `;
 
     const result = await model.generateContent(prompt);
@@ -148,31 +138,9 @@ INSTRUCCIONES FINALES ESTRICTAS:
     // 1. Limpieza de seguridad básica
     let cleanText = text.replace(/```html/g, '').replace(/```/g, '').trim();
 
-    // 2. FILTRO INFALIBLE V2 - Cubre TODOS los casos
-    // Caso 1: &frac{11}{12} o &frac{3}{4}  → 11/12
-    cleanText = cleanText.replace(/&frac\{(\d+)\}\{(\d+)\};?/g, '$1/$2');
-
-    // Caso 2: &frac57; → 5/7  (un dígito cada uno)
-    cleanText = cleanText.replace(/&frac(\d)(\d);?/g, '$1/$2');
-
-    // Caso 3: &frac9{12} o &frac3{8} → 9/12
-    cleanText = cleanText.replace(/&frac(\d+)\{(\d+)\};?/g, '$1/$2');
-
-    // Caso 4: \\frac{3}{4} (si Gemini usa sintaxis LaTeX) → 3/4
-    cleanText = cleanText.replace(/\\frac\{(\d+)\}\{(\d+)\}/g, '$1/$2');
-
-    // Caso 5: Entidades HTML numéricas de fracciones comunes
-    cleanText = cleanText.replace(/&frac12;/g, '1/2');
-    cleanText = cleanText.replace(/&frac14;/g, '1/4');
-    cleanText = cleanText.replace(/&frac34;/g, '3/4');
-    cleanText = cleanText.replace(/&frac13;/g, '1/3');
-    cleanText = cleanText.replace(/&frac23;/g, '2/3');
-
-    // Caso 6: Cualquier &frac restante no capturado (catch-all)
-    cleanText = cleanText.replace(/&frac[^;]*;?/g, (match) => {
-      console.warn("⚠️ Fracción no procesada detectada:", match);
-      return match;
-    });
+    // 2. ESCUDO ANTI-ASTERISCOS (Convierte el Markdown rebelde en HTML válido)
+    cleanText = cleanText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Doble asterisco a negrita
+    cleanText = cleanText.replace(/\*(.*?)\*/g, '<em>$1</em>'); // Asterisco simple a cursiva
 
     return {
       content: cleanText,
