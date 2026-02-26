@@ -10,7 +10,9 @@ import {
   LogOut,
   User as UserIcon,
   Sparkles,
-  Globe // <-- IMPORTAMOS EL ICONO DEL GLOBO
+  Globe,
+  ClipboardList,
+  FileQuestion // <-- NUEVO: Icono para los exámenes
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -41,12 +43,14 @@ export const Layout: React.FC<LayoutProps> = ({
 }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  // Definición del menú con la Comunidad añadida
+  // --- NUESTRO MENÚ ACTUALIZADO ---
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'gallery', label: 'Comunidad', icon: Globe }, // <-- AÑADIDA LA GALERÍA AQUÍ
+    { id: 'gallery', label: 'Comunidad', icon: Globe }, 
     { id: 'resources', label: 'Biblioteca', icon: BookOpen },
     { id: 'generator', label: 'Generador IA', icon: Brain },
+    { id: 'exams', label: 'Exámenes', icon: FileQuestion }, // <-- AÑADIDO: El nuevo botón de exámenes
+    { id: 'rubrics', label: 'Rúbricas', icon: ClipboardList }, 
     { id: 'pricing', label: 'Planes y Precios', icon: CreditCard },
   ];
 

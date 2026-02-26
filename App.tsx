@@ -5,6 +5,7 @@ import { User, UserPlan } from './types';
 // --- IMPORTS DE PÁGINAS Y COMPONENTES ---
 import Register from './pages/Register';
 import { Layout } from './components/Layout';
+import { ExamGenerator } from './pages/ExamGenerator'; // <-- AQUÍ ESTÁ TU EXAMEN
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
 import { LandingPage } from './pages/LandingPage'; 
@@ -13,7 +14,8 @@ import { WorksheetGenerator } from './pages/WorksheetGenerator';
 import { Pricing } from './pages/Pricing';
 import { PaymentSuccess } from './pages/PaymentSuccess'; 
 import { OnboardingWizard } from './components/OnboardingWizard'; 
-import { Gallery } from './pages/Gallery'; // <-- 1. IMPORTAMOS LA GALERÍA MÁGICA
+import { Gallery } from './pages/Gallery'; 
+import { RubricGenerator } from './pages/RubricGenerator'; 
 
 // --- DEFINIMOS EL USUARIO INVITADO ---
 const GUEST_USER: User = {
@@ -131,7 +133,7 @@ const App: React.FC = () => {
         onStart={() => setCurrentPage('login_required')} 
         onExplore={() => {
           setUser(GUEST_USER); 
-          setCurrentPage('gallery'); // <-- 2. AHORA "EJEMPLOS" LLEVA A LA COMUNIDAD
+          setCurrentPage('gallery');
         }}
       />
     );
@@ -158,7 +160,7 @@ const App: React.FC = () => {
       case 'dashboard': 
         return <Dashboard user={user} onNavigate={setCurrentPage} />;
       
-      case 'gallery': // <-- 3. AÑADIMOS LA RUTA DE LA GALERÍA
+      case 'gallery': 
         return <Gallery />;
 
       case 'resources': 
@@ -174,6 +176,16 @@ const App: React.FC = () => {
             }} 
           />
         );
+        
+      // 👇 NUEVA PANTALLA DE EXÁMENES 👇
+      case 'exams':
+        if (!isAuthenticated) return <Login onLogin={handleLogin} onSwitchToRegister={() => setAuthView('register')} />;
+        return <ExamGenerator user={user} />;
+
+      // 👇 PANTALLA DE RÚBRICAS 👇
+      case 'rubrics':
+        if (!isAuthenticated) return <Login onLogin={handleLogin} onSwitchToRegister={() => setAuthView('register')} />;
+        return <RubricGenerator user={user} />;
       
       case 'pricing': 
         return <Pricing user={user} onUpgrade={requireAuth} />;
