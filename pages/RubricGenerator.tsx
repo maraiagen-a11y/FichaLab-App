@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, EducationLevel, Subject } from '../types';
-import { ClipboardList, Sparkles, Loader2, AlertCircle, Printer, ArrowLeft, ChevronDown } from 'lucide-react'; // <-- AÑADIDO ChevronDown
+import { ClipboardList, Sparkles, Loader2, AlertCircle, Printer, ArrowLeft, ChevronDown } from 'lucide-react';
 import { generateRubric } from '../services/geminiService'; 
 
 interface RubricGeneratorProps {
@@ -8,8 +8,13 @@ interface RubricGeneratorProps {
 }
 
 export const RubricGenerator: React.FC<RubricGeneratorProps> = ({ user }) => {
-  const [subject, setSubject] = useState<Subject>('Matemáticas');
-  const [level, setLevel] = useState<EducationLevel>('1º ESO');
+  // 👇 EL USEEFFECT AHORA SÍ ESTÁ DENTRO DEL COMPONENTE
+  useEffect(() => {
+    document.title = "Generador de Rúbricas de Evaluación LOMLOE | FichaLab";
+  }, []);
+
+  const [subject, setSubject] = useState<Subject>('Matemáticas' as Subject);
+  const [level, setLevel] = useState<EducationLevel>('1º ESO' as EducationLevel);
   const [topic, setTopic] = useState('');
   const [instructions, setInstructions] = useState('');
   
@@ -37,9 +42,13 @@ export const RubricGenerator: React.FC<RubricGeneratorProps> = ({ user }) => {
       
       // Guardamos el HTML que nos devuelve la IA
       setGeneratedHtml(response.content);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setError(err.message || "Ocurrió un error al generar la rúbrica. Inténtalo de nuevo.");
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Ocurrió un error al generar la rúbrica. Inténtalo de nuevo.");
+      }
     } finally {
       setIsGenerating(false);
     }
@@ -123,7 +132,7 @@ export const RubricGenerator: React.FC<RubricGeneratorProps> = ({ user }) => {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            {/* SELECTOR ASIGNATURA (NUEVO DISEÑO) */}
+            {/* SELECTOR ASIGNATURA */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700">Asignatura</label>
               <div className="relative group">
@@ -140,7 +149,7 @@ export const RubricGenerator: React.FC<RubricGeneratorProps> = ({ user }) => {
               </div>
             </div>
 
-            {/* SELECTOR NIVEL EDUCATIVO (NUEVO DISEÑO) */}
+            {/* SELECTOR NIVEL EDUCATIVO */}
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700">Nivel Educativo</label>
               <div className="relative group">
