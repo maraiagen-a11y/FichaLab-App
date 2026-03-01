@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Le decimos a Google dónde está nuestro mapa
+Sitemap: https://fichalab.es/sitemap.xml

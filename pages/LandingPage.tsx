@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Library, Edit3, Download, Check, X, ArrowRight, Play, FileText, Zap, Brain, MessageSquare, Printer, Target, CheckSquare, Languages, Copy, Rocket, Globe, Users } from 'lucide-react';
+import { Sparkles, Library, Edit3, Download, Check, X, ArrowRight, Play, FileText, Zap, Brain, MessageSquare, Printer, Target, CheckSquare, Languages, Copy, Rocket, Globe, Users, Clock, ShieldAlert, Calculator, Calendar } from 'lucide-react';
 
 interface LandingPageProps {
   onStart: () => void;
@@ -32,7 +32,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
               <span className="font-extrabold text-2xl tracking-tight text-slate-900">FichaLab</span>
             </div>
             
-            {/* AQUÍ ESTÁN LAS OPCIONES MOVIDAS ARRIBA */}
             <div className="hidden md:flex items-center gap-8 text-slate-500 font-medium">
               <span className="hover:text-[#4F75FF] cursor-pointer transition-colors flex items-center gap-2 font-bold">
                 <FileText size={18}/> Inicio
@@ -57,7 +56,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
         </div>
       </nav>
 
-      {/* --- 1. HERO SECTION LIMPIO --- */}
+      {/* --- 1. HERO SECTION (SEO OPTIMIZADO) --- */}
       <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-blue-50/80 via-[#F8FAFC] to-[#F8FAFC]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
@@ -65,23 +64,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
             <div className="text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm text-slate-600 text-sm font-semibold mb-8 animate-fade-in-up">
                 <Users className="w-4 h-4 text-[#4F75FF]" />
-                Únete a la revolución docente
+                IA Educativa para Docentes Inconformistas
               </div>
               
               <h1 className="text-5xl lg:text-[5.5rem] font-extrabold tracking-tight text-slate-900 mb-6 leading-[1.1]">
-                Crea tus recursos <span className="text-[#4F75FF]">en</span> <br />
+                Exámenes y Fichas LOMLOE <span className="text-[#4F75FF]">en</span> <br />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4F75FF] to-[#38bdf8]">
                   segundos
                 </span>
               </h1>
               
               <p className="text-lg md:text-xl text-slate-500 mb-10 max-w-lg leading-relaxed">
-                El primer asistente todo en uno para profesores. Dile a la IA qué necesitas o <strong>descarga al instante material creado por otros profesores</strong> en nuestra comunidad.
+                El generador inteligente para profesores. Pega tu temario y la IA creará <strong>exámenes tipo test, rúbricas de evaluación y material adaptado a DUA</strong> al instante, listo para imprimir en PDF.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <button onClick={onStart} className="px-8 py-4 bg-[#4F75FF] hover:bg-[#3d5ee6] text-white rounded-full font-bold text-lg shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                  Empezar gratis
+                  Crear mi primer examen
                   <ArrowRight className="w-5 h-5" />
                 </button>
                 <button onClick={onExplore} className="px-8 py-4 bg-white hover:bg-slate-50 text-slate-800 border-2 border-slate-200 hover:border-blue-200 rounded-full font-bold text-lg transition-all shadow-sm flex items-center justify-center gap-2 group">
@@ -93,7 +92,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
 
             <div className="relative hidden lg:block">
               <div className="absolute -top-6 -right-6 bg-white px-5 py-3 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 z-20 flex items-center gap-2 font-bold text-sm text-slate-700 animate-bounce">
-                <Zap className="w-5 h-5 text-yellow-500 fill-yellow-500" /> IA Generando...
+                <Zap className="w-5 h-5 text-yellow-500 fill-yellow-500" /> Generando Saberes Básicos...
               </div>
 
               <div className="bg-white rounded-[2rem] p-8 shadow-2xl shadow-blue-900/5 border border-slate-100 relative z-10">
@@ -102,8 +101,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
                     <FileText className="w-8 h-8" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-slate-900">Ficha de Matemáticas</h3>
-                    <p className="text-slate-500">Generada en 5 segundos</p>
+                    <h3 className="text-xl font-bold text-slate-900">Examen de Biología 3º ESO</h3>
+                    <p className="text-slate-500">Con tabla de justificación curricular</p>
                   </div>
                 </div>
 
@@ -115,19 +114,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="border border-blue-100 bg-blue-50/30 rounded-2xl p-4 text-center">
-                    <div className="text-3xl font-extrabold text-[#4F75FF] mb-1">10</div>
-                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Ejercicios</div>
+                    <div className="text-3xl font-extrabold text-[#4F75FF] mb-1">15</div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Preguntas Test</div>
                   </div>
                   <div className="border border-green-100 bg-green-50/30 rounded-2xl p-4 text-center">
-                    <div className="text-3xl font-extrabold text-green-500 mb-1">3</div>
-                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Páginas</div>
+                    <div className="text-3xl font-extrabold text-green-500 mb-1">100%</div>
+                    <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Adaptado a DUA</div>
                   </div>
                 </div>
               </div>
 
               <div className="absolute -bottom-6 -left-6 bg-white px-5 py-3 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 z-20 flex items-center gap-3 font-bold text-sm text-slate-700">
                 <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-                Listo para descargar
+                Solucionario incluido
               </div>
             </div>
 
@@ -139,9 +138,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
       <div className="py-24 bg-white border-y border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-[#4F75FF] font-bold tracking-wide uppercase text-sm mb-3">Tu flujo de trabajo</h2>
+            <h2 className="text-[#4F75FF] font-bold tracking-wide uppercase text-sm mb-3">La herramienta definitiva</h2>
             <h3 className="text-3xl md:text-4xl font-extrabold text-slate-900">
-              De tu cabeza a la impresora en 3 pasos
+              De tus apuntes a la clase en 3 pasos
             </h3>
           </div>
 
@@ -152,16 +151,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
               <div className="w-20 h-20 mx-auto bg-blue-50 text-[#4F75FF] rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-blue-100">
                 <MessageSquare className="w-10 h-10" />
               </div>
-              <h4 className="text-xl font-bold text-slate-900 mb-2">1. Pide o Busca</h4>
-              <p className="text-slate-500 text-sm">Pídele a la IA lo que necesitas o busca en la Comunidad una ficha que ya esté hecha.</p>
+              <h4 className="text-xl font-bold text-slate-900 mb-2">1. Pega tu Temario</h4>
+              <p className="text-slate-500 text-sm">Elige la asignatura, el curso y dinos qué necesitas evaluar para que la IA se encargue de todo.</p>
             </div>
 
             <div className="relative z-10 bg-white p-6 text-center hover:-translate-y-2 transition-transform duration-300">
               <div className="w-20 h-20 mx-auto bg-blue-50 text-[#4F75FF] rounded-2xl flex items-center justify-center mb-6 shadow-sm border border-blue-100">
                 <Brain className="w-10 h-10" />
               </div>
-              <h4 className="text-xl font-bold text-slate-900 mb-2">2. Magia de la IA</h4>
-              <p className="text-slate-500 text-sm">FichaLab redacta los ejercicios y maqueta el documento entero de forma impecable.</p>
+              <h4 className="text-xl font-bold text-slate-900 mb-2">2. Magia Curricular</h4>
+              <p className="text-slate-500 text-sm">FichaLab redacta las preguntas y genera automáticamente la tabla de Competencias y Criterios LOMLOE.</p>
             </div>
 
             <div className="relative z-10 bg-white p-6 text-center hover:-translate-y-2 transition-transform duration-300">
@@ -169,13 +168,61 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
                 <Printer className="w-10 h-10" />
               </div>
               <h4 className="text-xl font-bold text-slate-900 mb-2">3. Descarga e Imprime</h4>
-              <p className="text-slate-500 text-sm">Obtén un PDF perfecto para repartir en clase (¡y otro con las soluciones!).</p>
+              <p className="text-slate-500 text-sm">Obtén tu rúbrica o examen en un PDF impecable para repartir en clase (¡y otro con las soluciones para ti!).</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* --- NUEVA SECCIÓN: LA COMUNIDAD --- */}
+      {/* --- 3. NUEVA SECCIÓN DE CASOS DE USO (SÚPER SEO) --- */}
+      <div className="py-24 bg-blue-50/50 border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-[#4F75FF] font-bold tracking-wide uppercase text-sm mb-3">Situaciones Reales en el Aula</h2>
+            <h3 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">
+              ¿No tienes tiempo para preparar clases? <br/>
+              FichaLab es tu salvavidas.
+            </h3>
+            <p className="text-lg text-slate-600">Descubre cómo resolver los problemas diarios del profesorado con un solo clic.</p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Tarjeta 1 */}
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:shadow-lg transition-shadow">
+              <ShieldAlert className="w-10 h-10 text-red-500 mb-6 bg-red-50 p-2 rounded-xl" />
+              <h4 className="text-lg font-bold text-slate-900 mb-3">Urgencias y Sustituciones</h4>
+              <p className="text-slate-600 text-sm mb-4">Si necesitas <strong>recursos para sustituciones de última hora</strong>, FichaLab te salva. Genera <strong>actividades para los últimos 10 minutos de clase</strong> o <strong>actividades para después de un examen</strong> en tiempo récord.</p>
+            </div>
+
+            {/* Tarjeta 2 */}
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:shadow-lg transition-shadow">
+              <Target className="w-10 h-10 text-emerald-500 mb-6 bg-emerald-50 p-2 rounded-xl" />
+              <h4 className="text-lg font-bold text-slate-900 mb-3">Atención a la Diversidad</h4>
+              <p className="text-slate-600 text-sm mb-4">Logra crear una <strong>tarea diferenciada sobre el mismo tema</strong> o <strong>ejercicios diferenciados por nivel</strong>. Obtén <strong>adaptaciones curriculares automáticas</strong> y <strong>recursos para alumnos con dificultades de lectura</strong>.</p>
+            </div>
+
+            {/* Tarjeta 3 */}
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:shadow-lg transition-shadow">
+              <Calculator className="w-10 h-10 text-purple-500 mb-6 bg-purple-50 p-2 rounded-xl" />
+              <h4 className="text-lg font-bold text-slate-900 mb-3">Material Específico</h4>
+              <p className="text-slate-600 text-sm mb-4">Descubre cómo hacer <strong>fichas para alumnos rápido</strong>. Úsalo como tu <strong>generador de ejercicios de matemáticas para primaria</strong> o para conseguir <strong>fichas de refuerzo de matemáticas de 3º de primaria</strong> listas para imprimir.</p>
+            </div>
+
+            {/* Tarjeta 4 */}
+            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-200 hover:shadow-lg transition-shadow">
+              <Calendar className="w-10 h-10 text-blue-500 mb-6 bg-blue-50 p-2 rounded-xl" />
+              <h4 className="text-lg font-bold text-slate-900 mb-3">Productividad y Tiempo Libre</h4>
+              <p className="text-slate-600 text-sm mb-4">Aprende <strong>cómo preparar clases más rápido</strong> y consigue una <strong>planificación semanal automatizada</strong>. Consigue <strong>ejercicios para alumnos que terminan antes</strong> y empieza a <strong>reducir el tiempo de corrección de ejercicios</strong>.</p>
+            </div>
+          </div>
+          
+          <div className="mt-12 text-center">
+            <p className="text-slate-500 font-medium">Básicamente: la respuesta perfecta a <span className="italic text-slate-700">"¿Dónde encuentro fichas de trabajo para imprimir gratis?"</span>.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* --- 4. LA COMUNIDAD --- */}
       <div className="py-24 bg-slate-900 overflow-hidden relative">
         <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/20 rounded-full blur-[100px]"></div>
         <div className="absolute bottom-0 left-0 w-96 h-96 bg-purple-500/20 rounded-full blur-[100px]"></div>
@@ -185,34 +232,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
             
             <div className="text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-blue-400 text-sm font-bold mb-6">
-                <Globe className="w-4 h-4" /> La Galería Pública
+                <Globe className="w-4 h-4" /> La Galería Docente Pública
               </div>
               
               <h3 className="text-4xl md:text-5xl font-extrabold text-white mb-6 leading-tight">
-                No reinventes la rueda.<br/> <span className="text-[#4F75FF]">Úsala.</span>
+                Miles de recursos educativos a un clic.<br/> <span className="text-[#4F75FF]">Gratis.</span>
               </h3>
               
               <p className="text-lg text-slate-300 mb-8 leading-relaxed">
-                ¿Para qué vas a pasar horas creando una ficha sobre la fotosíntesis si otro profe ya ha creado una increíble en FichaLab? Accede a nuestra galería comunitaria, busca tu tema, descarga el PDF y listo.
+                ¿Para qué vas a pasar horas diseñando un examen sobre la célula si otro profe ya lo ha creado en FichaLab? Accede a nuestro banco de recursos, busca tu tema, descarga el PDF y ahorra tiempo de preparación.
               </p>
 
               <ul className="space-y-4 mb-10">
                 <li className="flex items-center gap-3 text-slate-200 font-medium">
                   <div className="bg-blue-500/20 p-1.5 rounded-lg text-blue-400"><Check size={18}/></div>
-                  Fichas revisadas por profesores reales.
+                  Material didáctico revisado por profesores reales.
                 </li>
                 <li className="flex items-center gap-3 text-slate-200 font-medium">
                   <div className="bg-blue-500/20 p-1.5 rounded-lg text-blue-400"><Check size={18}/></div>
-                  Cópialas a tu biblioteca y edítalas a tu gusto.
+                  Edita y adapta cualquier ficha a tus alumnos.
                 </li>
                 <li className="flex items-center gap-3 text-slate-200 font-medium">
                   <div className="bg-blue-500/20 p-1.5 rounded-lg text-blue-400"><Check size={18}/></div>
-                  Comparte tus mejores creaciones con un clic.
+                  Comparte tus mejores creaciones curriculares.
                 </li>
               </ul>
               
               <button onClick={onExplore} className="px-8 py-4 bg-[#4F75FF] hover:bg-[#3d5ee6] text-white rounded-full font-bold text-lg transition-all shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2">
-                <Globe className="w-5 h-5" /> Entrar a la Comunidad
+                <Globe className="w-5 h-5" /> Entrar al Banco de Recursos
               </button>
             </div>
 
@@ -227,14 +274,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
               <div className="absolute top-20 left-0 w-80 bg-white rounded-2xl p-6 shadow-2xl transform -rotate-3 hover:rotate-0 transition-transform duration-500 z-20 border border-blue-100">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider bg-orange-100 text-orange-600 px-2 py-1 rounded-md mb-3 inline-block">Primaria</span>
                 <h4 className="font-bold text-slate-900 text-lg mb-2">Sumas con Llevadas (Pokémon)</h4>
-                <p className="text-slate-500 text-sm mb-4">10 ejercicios divertidos para clase...</p>
+                <p className="text-slate-500 text-sm mb-4">10 ejercicios adaptados para clase...</p>
                 <div className="h-10 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center text-sm font-bold border border-blue-100"><Download className="w-4 h-4 mr-2"/> Descargar PDF</div>
               </div>
 
               <div className="absolute bottom-0 right-20 w-80 bg-white rounded-2xl p-6 shadow-2xl transform rotate-3 hover:rotate-0 transition-transform duration-500 z-30">
                 <span className="text-[10px] font-extrabold uppercase tracking-wider bg-emerald-100 text-emerald-600 px-2 py-1 rounded-md mb-3 inline-block">Biología</span>
-                <h4 className="font-bold text-slate-900 text-lg mb-2">Partes de la Célula Vegetal</h4>
-                <p className="text-slate-500 text-sm mb-4">Esquema para rellenar con...</p>
+                <h4 className="font-bold text-slate-900 text-lg mb-2">Rúbrica de la Célula Vegetal</h4>
+                <p className="text-slate-500 text-sm mb-4">Criterios de evaluación LOMLOE...</p>
                 <div className="h-10 bg-slate-100 rounded-lg flex items-center justify-center text-slate-400 text-sm font-bold"><Download className="w-4 h-4 mr-2"/> Descargar PDF</div>
               </div>
             </div>
@@ -243,13 +290,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
         </div>
       </div>
 
-      {/* --- 4. PRECIOS CON TOGGLE ANUAL --- */}
+      {/* --- 5. PRECIOS CON TOGGLE ANUAL --- */}
       <div className="py-24 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-10">
-            <h2 className="text-[#4F75FF] font-bold tracking-wide uppercase text-sm mb-3">Planes Simples</h2>
+            <h2 className="text-[#4F75FF] font-bold tracking-wide uppercase text-sm mb-3">Planes Docentes</h2>
             <h3 className="text-4xl md:text-5xl font-extrabold text-slate-900 mb-6">
-              Recupera tu tiempo libre
+              Recupera tus fines de semana
             </h3>
           </div>
 
@@ -287,7 +334,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
                 <FileText className="w-6 h-6" />
               </div>
               <h4 className="text-2xl font-bold text-slate-900 mb-2">Free</h4>
-              <p className="text-slate-500 mb-8">Perfecto para probar la magia</p>
+              <p className="text-slate-500 mb-8">Perfecto para probar la inteligencia artificial</p>
               
               <div className="mb-8 h-[60px] flex items-center">
                 <span className="text-5xl font-extrabold text-slate-900">Gratis</span>
@@ -295,9 +342,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
 
               <div className="space-y-4 mb-10 flex-1">
                 <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> 3 generaciones al mes</div>
-                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Acceso a la Comunidad</div>
-                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Exportar en PDF</div>
-                <div className="flex items-center gap-3 text-slate-400 opacity-60"><X className="w-5 h-5" /> Fichas ilimitadas y solucionarios</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Acceso al Banco de Recursos</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Exportar en PDF listos para imprimir</div>
+                <div className="flex items-center gap-3 text-slate-400 opacity-60"><X className="w-5 h-5" /> Exámenes ilimitados y rúbricas</div>
               </div>
 
               <button onClick={onStart} className="w-full py-4 rounded-xl font-bold text-slate-700 bg-white border-2 border-slate-200 hover:border-slate-300 transition-colors">
@@ -311,8 +358,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
                 <Sparkles className="w-4 h-4" /> Recomendado
               </div>
               <div className="mb-6"><BrainLogo className="w-12 h-12" /></div>
-              <h4 className="text-2xl font-bold text-slate-900 mb-2">Premium</h4>
-              <p className="text-slate-500 mb-8">Para profes que valoran su tiempo</p>
+              <h4 className="text-2xl font-bold text-slate-900 mb-2">Pro Docente</h4>
+              <p className="text-slate-500 mb-8">Para profes que quieren olvidarse de la burocracia</p>
               
               <div className="mb-8 h-[60px] flex flex-col justify-center">
                 <div className="flex items-baseline gap-2">
@@ -325,13 +372,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
               </div>
 
               <div className="space-y-4 mb-10 flex-1">
-                <div className="flex items-center gap-3 text-slate-600 font-medium"><Check className="w-5 h-5 text-[#4F75FF]" /> Generaciones ilimitadas</div>
-                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Todo tipo de asignaturas y niveles</div>
-                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Exportar PDF con Solucionario</div>
+                <div className="flex items-center gap-3 text-slate-600 font-medium"><Check className="w-5 h-5 text-[#4F75FF]" /> Generador de rúbricas y exámenes ilimitado</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Adaptación a DUA y justificación LOMLOE</div>
+                <div className="flex items-center gap-3 text-slate-600"><Check className="w-5 h-5 text-[#4F75FF]" /> Exportar PDF con Solucionario automático</div>
               </div>
 
               <button onClick={onStart} className="w-full py-4 rounded-xl font-bold text-white bg-[#4F75FF] hover:bg-[#3d5ee6] shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5">
-                {isAnnual ? 'Desbloquear Año Premium' : 'Desbloquear Ilimitado'}
+                {isAnnual ? 'Desbloquear Año Pro' : 'Desbloquear Pro Mensual'}
               </button>
             </div>
           </div>
@@ -345,7 +392,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStart, onExplore }) 
             <BrainLogo className="w-8 h-8" />
             <span className="font-extrabold text-xl text-slate-900">FichaLab</span>
           </div>
-          <p className="text-slate-500 text-sm">© 2026 FichaLab. Todos los derechos reservados.</p>
+          <p className="text-slate-500 text-sm">© 2026 FichaLab España. Herramientas de Inteligencia Artificial para la Educación.</p>
         </div>
       </footer>
     </div>
