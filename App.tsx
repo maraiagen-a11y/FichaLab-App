@@ -210,6 +210,8 @@ const AppContent: React.FC = () => {
       </Route>
 
       {/* 👇 RUTAS SEO SATÉLITE (El Caballo de Troya) 👇 */}
+      
+      {/* 1. Mates Primaria */}
       <Route path="/recursos/fichas-matematicas-3-primaria" element={
         <SeoArticle 
           metaTitle="Fichas de Matemáticas para 3º de Primaria para Imprimir | FichaLab"
@@ -217,31 +219,74 @@ const AppContent: React.FC = () => {
           subtitle="Descubre cómo generar infinitos ejercicios de sumas, restas, multiplicaciones y problemas adaptados al nivel exacto de tus alumnos."
           content={
             <div className="space-y-6">
-              <p>Encontrar <strong>fichas de matemáticas para 3º de primaria</strong> que se adapten exactamente a lo que has dado en clase puede llevarte horas de búsqueda por internet. A menudo, los PDFs que descargas son demasiado fáciles, demasiado difíciles, o no cumplen con la normativa LOMLOE actual.</p>
-              
-              <h2 className="text-2xl font-bold text-slate-900 mt-8 mb-4">El problema de los recursos estándar</h2>
-              <p>Cada aula es un mundo. Algunos alumnos necesitan <strong>ejercicios de refuerzo</strong> porque se atascan con las llevadas, mientras que otros necesitan <strong>actividades para alumnos que terminan antes</strong> (ejercicios de ampliación).</p>
-              
+              <p>Encontrar <strong>fichas de matemáticas para 3º de primaria</strong> que se adapten exactamente a lo que has dado en clase puede llevarte horas de búsqueda por internet. A menudo, los PDFs que descargas son demasiado fáciles, demasiado difíciles, o no cumplen con la normativa actual.</p>
               <h2 className="text-2xl font-bold text-slate-900 mt-8 mb-4">La solución: Generación por Inteligencia Artificial</h2>
-              <p>En lugar de reciclar fotocopias antiguas, las nuevas herramientas educativas te permiten crear material único. Con un generador como FichaLab, solo tienes que pedir: <em>"Crea 10 problemas de multiplicaciones por una cifra con temática de superhéroes"</em>, y obtendrás un PDF listo para imprimir en segundos, junto con su solucionario para ti.</p>
+              <p>En lugar de reciclar fotocopias antiguas, herramientas como FichaLab te permiten crear material único. Solo tienes que pedir: <em>"Crea 10 problemas de multiplicaciones por una cifra con temática de superhéroes"</em>, y obtendrás un PDF listo para imprimir en segundos.</p>
             </div>
           }
         />
       } />
 
-      {/* RUTA COMODÍN: Si escriben mal una URL, vuelven al inicio */}
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
-};
+      {/* 2. Sustituciones y Guardias */}
+      <Route path="/recursos/sustituciones-ultima-hora" element={
+        <SeoArticle 
+          metaTitle="Recursos para Sustituciones de Última Hora y Guardias | FichaLab"
+          h1="Recursos para Sustituciones de Última Hora"
+          subtitle="Sobrevive a las guardias y a los últimos 10 minutos de clase con actividades generadas en segundos que sí aportan valor educativo."
+          content={
+            <div className="space-y-6">
+              <p>Todo docente conoce el pánico de tener que cubrir una clase que no es suya sin material preparado. Buscar <strong>recursos para sustituciones de última hora</strong> suele acabar en ponerles una película o dejarles tiempo libre, perdiendo una hora valiosa.</p>
+              <h2 className="text-2xl font-bold text-slate-900 mt-8 mb-4">Salva los últimos 10 minutos de clase</h2>
+              <p>Tanto si estás de guardia como si necesitas <strong>actividades para los últimos 10 minutos de clase</strong> o <strong>ejercicios para alumnos que terminan antes</strong>, la inteligencia artificial es tu mejor aliada. Genera pasatiempos educativos, debates rápidos o retos matemáticos desde tu móvil antes de entrar por la puerta del aula.</p>
+            </div>
+          }
+        />
+      } />
 
-// --- EL CONTENEDOR PRINCIPAL ---
-const App: React.FC = () => {
-  return (
-    <BrowserRouter>
-      <AppContent />
-    </BrowserRouter>
-  );
-};
+      {/* 3. Atención a la Diversidad (DUA) */}
+      <Route path="/recursos/adaptaciones-curriculares-dua" element={
+        <SeoArticle 
+          metaTitle="Adaptaciones Curriculares Automáticas y DUA | FichaLab"
+          h1="Adaptaciones Curriculares Automáticas (DUA)"
+          subtitle="Crea material diferenciado para alumnos con dificultades de lectura, dislexia o altas capacidades sin invertir horas extra."
+          content={
+            <div className="space-y-6">
+              <p>El Diseño Universal para el Aprendizaje (DUA) exige que adaptemos nuestros materiales a todos los ritmos, pero el día solo tiene 24 horas. Crear una <strong>tarea diferenciada sobre el mismo tema</strong> de forma manual es agotador.</p>
+              <h2 className="text-2xl font-bold text-slate-900 mt-8 mb-4">Ejercicios diferenciados por nivel en 1 clic</h2>
+              <p>Con FichaLab, puedes generar tu examen normal y, con un solo clic, pedirle a la IA: <em>"Adapta este mismo texto para un alumno con dificultades de lectura"</em> o <em>"Crea una versión de ampliación para altas capacidades"</em>. Consigue <strong>adaptaciones curriculares automáticas</strong> y asegúrate de que nadie se queda atrás.</p>
+            </div>
+          }
+        />
+      } />
 
-export default App;
+      {/* 4. Exámenes LOMLOE */}
+      <Route path="/recursos/generador-examenes-lomloe" element={
+        <SeoArticle 
+          metaTitle="Generador de Exámenes LOMLOE con IA | FichaLab"
+          h1="Generador de Exámenes LOMLOE Automático"
+          subtitle="Redacta exámenes tipo test o de desarrollo con la justificación de saberes básicos y criterios de evaluación ya integrada."
+          content={
+            <div className="space-y-6">
+              <p>Redactar preguntas es solo la mitad del trabajo. La verdadera burocracia llega cuando tienes que justificar cada pregunta con la normativa actual. Si buscas <strong>cómo preparar clases más rápido</strong>, automatizar este proceso es el primer paso.</p>
+              <h2 className="text-2xl font-bold text-slate-900 mt-8 mb-4">Tu asistente curricular personal</h2>
+              <p>Un <strong>generador de exámenes</strong> moderno no solo te da las preguntas y el solucionario. FichaLab cruza tus temas con el currículo oficial y te devuelve una tabla perfecta detallando qué competencias específicas y criterios se evalúan en cada ejercicio. Imprime y al aula.</p>
+            </div>
+          }
+        />
+      } />
+
+      {/* 5. Rúbricas */}
+      <Route path="/recursos/como-hacer-rubricas-evaluacion" element={
+        <SeoArticle 
+          metaTitle="Generador de Rúbricas de Evaluación LOMLOE | FichaLab"
+          h1="Cómo Hacer Rúbricas de Evaluación Rápido"
+          subtitle="Evalúa situaciones de aprendizaje, proyectos y exposiciones con rúbricas detalladas creadas específicamente para tu aula."
+          content={
+            <div className="space-y-6">
+              <p>La evaluación formativa exige rúbricas claras, pero diseñar los niveles de logro (Excelente, Bueno, En Proceso, Necesita Mejora) para cada pequeño proyecto consume toda tu planificación semanal.</p>
+              <h2 className="text-2xl font-bold text-slate-900 mt-8 mb-4">De la idea al papel en 10 segundos</h2>
+              <p>Si alguna vez has buscado <strong>cómo hacer rúbricas para alumnos rápido</strong>, la IA tiene la respuesta. Dile a FichaLab qué van a hacer tus alumnos (ej: "Un podcast sobre el Imperio Romano en 2º de la ESO") y la IA te construirá una tabla de evaluación perfecta lista para adjuntar a tu programación.</p>
+            </div>
+          }
+        />
+      } />
