@@ -13,6 +13,7 @@
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.95.3",
     "@types/marked": "^5.0.2",
+    "@vercel/analytics": "^1.6.1",
     "html2pdf.js": "^0.14.0",
     "lucide-react": "^0.563.0",
     "marked": "^17.0.3",

@@ -7,6 +7,7 @@ import { User, UserPlan } from './types';
 import { SeoArticle } from './pages/SeoArticle'; // <-- NUESTRO CABALLO DE TROYA
 import Register from './pages/Register';
 import { Layout } from './components/Layout';
+import { Analytics } from '@vercel/analytics/react';
 import { ExamGenerator } from './pages/ExamGenerator'; 
 import { Login } from './pages/Login';
 import { Dashboard } from './pages/Dashboard';
@@ -290,3 +291,22 @@ const AppContent: React.FC = () => {
           }
         />
       } />
+
+      {/* RUTA COMODÍN: Si escriben mal una URL, vuelven al inicio */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
+// --- EL CONTENEDOR PRINCIPAL ---
+const App: React.FC = () => {
+  return (
+    <BrowserRouter>
+      <AppContent />
+      {/* 👇 AQUÍ ESTÁ VERCEL ANALYTICS 👇 */}
+      <Analytics /> 
+    </BrowserRouter>
+  );
+};
+
+export default App;
