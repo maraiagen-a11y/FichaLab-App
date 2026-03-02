@@ -378,3 +378,52 @@ INSTRUCCIONES FINALES ESTRICTAS:
     throw new Error(`Error de IA al generar examen: ${error.message}`);
   }
 };
+export const generateLearningSituation = async (params: {
+  subject: string;
+  level: string;
+  topic: string;
+  sessions: number;
+  instructions?: string;
+}) => {
+  const prompt = `
+    Eres un inspector de educación experto en la nueva ley educativa española (LOMLOE) y un maestro del diseño universal para el aprendizaje (DUA).
+    Necesito que diseñes una "Situación de Aprendizaje" completa.
+    
+    Parámetros:
+    - Asignatura: ${params.subject}
+    - Nivel: ${params.level}
+    - Temática / Reto / Contexto: ${params.topic}
+    - Número de sesiones estimadas: ${params.sessions}
+    - Instrucciones adicionales: ${params.instructions || 'Ninguna'}
+
+    Devuelve ÚNICAMENTE código HTML válido. Nada de markdown (sin \`\`\`html), nada de texto fuera del HTML.
+    El HTML debe tener esta estructura profesional, usando clases de Tailwind CSS para el diseño (usa colores neutros y azules/pizarras como text-slate-800, bg-blue-50, border-blue-200, etc.):
+    
+    1. Un <header> con el Título de la Situación de Aprendizaje (creativo y motivador), la asignatura, nivel y sesiones.
+    2. Una sección de "Justificación y Contexto" (¿Por qué es relevante para los alumnos? ¿Qué problema del mundo real resuelve?).
+    3. Una tabla o grid muy visual con la "Concreción Curricular LOMLOE": 
+       - Competencias Específicas trabajadas.
+       - Criterios de Evaluación.
+       - Saberes Básicos.
+    4. Una "Secuenciación Didáctica" detallada sesión por sesión (Sesión 1: Motivación, Sesión 2: Desarrollo... hasta la última sesión).
+    5. Medidas de Atención a la Diversidad (DUA).
+    6. Producto final y Evaluación (¿Cómo se evaluará?).
+
+    Haz que el tono sea profesional, directo y listo para presentar a inspección educativa.
+  `;
+
+  try {
+    // 👇 ESTA ES LA LÍNEA MÁGICA QUE FALTABA 👇
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); 
+    
+    const result = await model.generateContent(prompt);
+    let htmlContent = result.response.text();
+    
+    // Limpieza por si la IA devuelve markdown
+    htmlContent = htmlContent.replace(/```html/g, '').replace(/```/g, '').trim();
+    return { content: htmlContent };
+  } catch (error: any) {
+    console.error("Error generating learning situation:", error);
+    throw new Error(`Error de Gemini: ${error.message || error}`);
+  }
+};

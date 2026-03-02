@@ -12,7 +12,8 @@ import {
   Sparkles,
   Globe,
   ClipboardList,
-  FileQuestion // <-- NUEVO: Icono para los exámenes
+  FileQuestion,
+  Target // <-- AQUÍ IMPORTAMOS EL ICONO NUEVO
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -49,8 +50,9 @@ export const Layout: React.FC<LayoutProps> = ({
     { id: 'gallery', label: 'Comunidad', icon: Globe }, 
     { id: 'resources', label: 'Biblioteca', icon: BookOpen },
     { id: 'generator', label: 'Generador IA', icon: Brain },
-    { id: 'exams', label: 'Exámenes', icon: FileQuestion }, // <-- AÑADIDO: El nuevo botón de exámenes
+    { id: 'exams', label: 'Exámenes', icon: FileQuestion }, 
     { id: 'rubrics', label: 'Rúbricas', icon: ClipboardList }, 
+    { id: 'situaciones', label: 'Situaciones (SdA)', icon: Target }, // <-- AQUÍ ESTÁ EL NUEVO BOTÓN
     { id: 'pricing', label: 'Planes y Precios', icon: CreditCard },
   ];
 
