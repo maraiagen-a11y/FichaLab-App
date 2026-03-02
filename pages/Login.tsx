@@ -8,7 +8,8 @@ import {
   Sparkles, 
   BookOpen, 
   Clock,
-  Brain
+  Brain,
+  CheckCircle2
 } from 'lucide-react';
 
 interface LoginProps {
@@ -42,6 +43,10 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitchToRegister }) => 
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // NUEVOS ESTADOS PARA RECUPERAR CONTRASEÑA
+  const [isResetMode, setIsResetMode] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   // Login con Correo y Contraseña
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +55,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitchToRegister }) => 
     setError(null);
 
     try {
-      const { data, authError } = await supabase.auth.signInWithPassword({
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -62,8 +67,29 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitchToRegister }) => 
       }
     } catch (err: any) {
       setError(err.message === 'Invalid login credentials' 
-        ? 'El correo o la contraseña son incorrectos.' 
+        ? 'El correo o la contraseña son incorrectos. Por favor, revisa tus datos.' 
         : 'Ocurrió un error al iniciar sesión.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Enviar correo de recuperación
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/actualizar-contrasena`,
+      });
+
+      if (error) throw error;
+      
+      setResetSuccess(true);
+    } catch (err: any) {
+      setError(err.message || 'Error al enviar el correo de recuperación');
     } finally {
       setLoading(false);
     }
@@ -76,7 +102,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitchToRegister }) => 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          // Asegura que al volver de Google, volvamos a la app
           redirectTo: window.location.origin
         }
       });
@@ -92,7 +117,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitchToRegister }) => 
       
       {/* --- COLUMNA IZQUIERDA (MARKETING / VENTA) --- */}
       <div className="hidden lg:flex lg:w-1/2 bg-[#4F75FF] text-white flex-col justify-between p-12 relative overflow-hidden">
-        
         <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent pointer-events-none"></div>
         <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-blue-400/30 rounded-full blur-3xl"></div>
 
@@ -142,7 +166,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitchToRegister }) => 
 
       {/* --- COLUMNA DERECHA (FORMULARIO) --- */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 relative">
-        
         <div className="absolute top-8 left-8 flex items-center gap-2 lg:hidden">
             <BrainLogo className="w-8 h-8"/>
             <span className="font-extrabold text-xl tracking-tight text-slate-900">FichaLab</span>
@@ -151,31 +174,48 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitchToRegister }) => 
         <div className="w-full max-w-md space-y-8 bg-white p-10 rounded-[2.5rem] shadow-2xl shadow-slate-200/50 border border-slate-100">
           
           <div className="text-center">
-            <h2 className="text-3xl font-extrabold text-slate-900">¡Hola de nuevo! 👋</h2>
+            <h2 className="text-3xl font-extrabold text-slate-900">
+              {isResetMode ? 'Recupera tu acceso 🔐' : '¡Hola de nuevo! 👋'}
+            </h2>
             <p className="mt-2 text-slate-500 font-medium">
-              Accede a tu cuenta para continuar creando.
+              {isResetMode 
+                ? 'Te enviaremos un enlace a tu correo para crear una nueva contraseña.' 
+                : 'Accede a tu cuenta para continuar creando.'}
             </p>
           </div>
 
           <div className="mt-8 space-y-6">
             
-            {/* BOTÓN DE GOOGLE */}
-            <button 
-              onClick={handleGoogleLogin}
-              className="w-full flex items-center justify-center gap-3 py-3.5 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-xl text-slate-700 font-bold transition-all shadow-sm"
-            >
-              <GoogleIcon />
-              Continuar con Google
-            </button>
+            {/* Solo mostramos el login de Google si NO estamos en modo recuperar contraseña */}
+            {!isResetMode && (
+              <>
+                <button 
+                  onClick={handleGoogleLogin}
+                  className="w-full flex items-center justify-center gap-3 py-3.5 bg-white border-2 border-slate-200 hover:border-slate-300 hover:bg-slate-50 rounded-xl text-slate-700 font-bold transition-all shadow-sm"
+                >
+                  <GoogleIcon />
+                  Continuar con Google
+                </button>
 
-            {/* SEPARADOR VISUAL */}
-            <div className="relative flex items-center py-2">
-              <div className="flex-grow border-t border-slate-200"></div>
-              <span className="flex-shrink-0 mx-4 text-slate-400 text-sm font-medium">O con tu correo</span>
-              <div className="flex-grow border-t border-slate-200"></div>
-            </div>
+                <div className="relative flex items-center py-2">
+                  <div className="flex-grow border-t border-slate-200"></div>
+                  <span className="flex-shrink-0 mx-4 text-slate-400 text-sm font-medium">O con tu correo</span>
+                  <div className="flex-grow border-t border-slate-200"></div>
+                </div>
+              </>
+            )}
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* MENSAJE DE ÉXITO DE RECUPERACIÓN */}
+            {resetSuccess && (
+              <div className="rounded-xl bg-green-50 p-4 border border-green-200 flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0 mt-0.5" />
+                <p className="text-sm font-bold text-green-800">
+                  ¡Listo! Revisa tu bandeja de entrada (y la carpeta de spam). Te hemos enviado un enlace para cambiar tu contraseña.
+                </p>
+              </div>
+            )}
+
+            <form className="space-y-6" onSubmit={isResetMode ? handleResetPassword : handleSubmit}>
               <div className="space-y-5">
                 <div>
                   <label htmlFor="email" className="block text-sm font-bold text-slate-700 mb-2">
@@ -195,41 +235,52 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitchToRegister }) => 
                       placeholder="profe@ejemplo.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      disabled={resetSuccess}
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label htmlFor="password" className="block text-sm font-bold text-slate-700 mb-2">
-                    Contraseña
-                  </label>
-                  <div className="relative rounded-xl shadow-sm">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-slate-400" />
+                {!isResetMode && (
+                  <div>
+                    <div className="flex justify-between items-center mb-2">
+                      <label htmlFor="password" className="block text-sm font-bold text-slate-700">
+                        Contraseña
+                      </label>
+                      <button 
+                        type="button" 
+                        onClick={() => { setIsResetMode(true); setError(null); }}
+                        className="text-sm font-bold text-[#4F75FF] hover:text-[#3d5ee6]"
+                      >
+                        ¿La has olvidado?
+                      </button>
                     </div>
-                    <input
-                      id="password"
-                      name="password"
-                      type="password"
-                      autoComplete="current-password"
-                      required
-                      className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#4F75FF]/20 focus:border-[#4F75FF] transition-all text-slate-900 outline-none"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                    />
+                    <div className="relative rounded-xl shadow-sm">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <Lock className="h-5 w-5 text-slate-400" />
+                      </div>
+                      <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        autoComplete="current-password"
+                        required
+                        className="block w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[#4F75FF]/20 focus:border-[#4F75FF] transition-all text-slate-900 outline-none"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
+              {/* MENSAJE DE ERROR */}
               {error && (
                 <div className="rounded-xl bg-red-50 p-4 border border-red-100">
                   <div className="flex items-center gap-3">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                    </div>
+                    <svg className="h-5 w-5 text-red-500 shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
                     <h3 className="text-sm font-bold text-red-800">{error}</h3>
                   </div>
                 </div>
@@ -239,24 +290,36 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onSwitchToRegister }) => 
                 <Button
                   type="submit"
                   isLoading={loading}
-                  className="w-full flex justify-center items-center gap-2 py-4 text-base font-bold bg-[#4F75FF] hover:bg-[#3d5ee6] text-white rounded-xl shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5"
+                  disabled={resetSuccess}
+                  className="w-full flex justify-center items-center gap-2 py-4 text-base font-bold bg-[#4F75FF] hover:bg-[#3d5ee6] text-white rounded-xl shadow-lg shadow-blue-500/30 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:transform-none"
                 >
-                  {loading ? "Iniciando..." : <>Iniciar Sesión <ArrowRight className="w-5 h-5" /></>}
+                  {loading 
+                    ? (isResetMode ? "Enviando..." : "Iniciando...") 
+                    : (isResetMode ? "Enviar enlace de recuperación" : <>Iniciar Sesión <ArrowRight className="w-5 h-5" /></>)}
                 </Button>
               </div>
             </form>
           </div>
 
           <div className="mt-8 text-center border-t border-slate-100 pt-6">
-            <p className="text-sm font-medium text-slate-500">
-              ¿Aún no tienes cuenta en FichaLab? <br className="sm:hidden" />
+            {isResetMode ? (
               <button 
-                onClick={onSwitchToRegister}
-                className="mt-2 sm:mt-0 font-bold text-[#4F75FF] hover:text-[#3d5ee6] transition-colors"
+                onClick={() => { setIsResetMode(false); setError(null); setResetSuccess(false); }} 
+                className="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors"
               >
-                Crea una gratis aquí
+                ← Volver al inicio de sesión
               </button>
-            </p>
+            ) : (
+              <p className="text-sm font-medium text-slate-500">
+                ¿Aún no tienes cuenta en FichaLab? <br className="sm:hidden" />
+                <button 
+                  onClick={onSwitchToRegister}
+                  className="mt-2 sm:mt-0 font-bold text-[#4F75FF] hover:text-[#3d5ee6] transition-colors"
+                >
+                  Crea una gratis aquí
+                </button>
+              </p>
+            )}
           </div>
         </div>
       </div>

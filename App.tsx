@@ -6,6 +6,7 @@ import { User, UserPlan } from './types';
 // --- IMPORTS DE PÁGINAS Y COMPONENTES ---
 import { SeoArticle } from './pages/SeoArticle';
 import Register from './pages/Register';
+import { UpdatePassword } from './pages/UpdatePassword';
 import { Layout } from './components/Layout';
 import { Analytics } from '@vercel/analytics/react';
 import { ExamGenerator } from './pages/ExamGenerator'; 
@@ -19,7 +20,7 @@ import { PaymentSuccess } from './pages/PaymentSuccess';
 import { OnboardingWizard } from './components/OnboardingWizard'; 
 import { Gallery } from './pages/Gallery'; 
 import { RubricGenerator } from './pages/RubricGenerator'; 
-import { SdaGenerator } from './pages/SdaGenerator'; // <-- AÑADIDO: Situaciones de Aprendizaje
+import { SdaGenerator } from './pages/SdaGenerator';
 
 const GUEST_USER: User = {
   id: 'guest',
@@ -96,7 +97,7 @@ const AppContent: React.FC = () => {
         });
         setIsAuthenticated(true);
         
-        // Si estábamos en login y nos logueamos, redirigir al panel
+        // 👇 AQUÍ ESTÁ EL ARREGLO: Ya no te redirige si estás en "actualizar-contrasena"
         if (location.pathname === '/login' || location.pathname === '/registro') {
            navigate('/dashboard');
         }
@@ -118,7 +119,7 @@ const AppContent: React.FC = () => {
       generator: '/crear-fichas',
       exams: '/crear-examenes',
       rubrics: '/crear-rubricas',
-      situaciones: '/crear-situaciones', // <-- AÑADIDO: Ruta de SdA
+      situaciones: '/crear-situaciones',
       pricing: '/precios',
       payment_success: '/payment-success',
       login_required: '/login'
@@ -135,7 +136,7 @@ const AppContent: React.FC = () => {
     if (path.includes('/crear-fichas')) return 'generator';
     if (path.includes('/crear-examenes')) return 'exams';
     if (path.includes('/crear-rubricas')) return 'rubrics';
-    if (path.includes('/crear-situaciones')) return 'situaciones'; // <-- AÑADIDO: Iluminar botón SdA
+    if (path.includes('/crear-situaciones')) return 'situaciones';
     if (path.includes('/precios')) return 'pricing';
     if (path.includes('/payment-success')) return 'payment_success';
     return 'dashboard';
@@ -195,6 +196,8 @@ const AppContent: React.FC = () => {
       
       <Route path="/login" element={<Login onLogin={handleLogin} onSwitchToRegister={() => navigate('/registro')} />} />
       <Route path="/registro" element={<Register onSwitchToLogin={() => navigate('/login')} />} />
+      {/* AQUÍ ESTÁ LA NUEVA RUTA */}
+      <Route path="/actualizar-contrasena" element={<UpdatePassword />} />
 
       {/* RUTAS CON LAYOUT (El panel de control) */}
       <Route element={<AppLayout />}>
@@ -204,10 +207,7 @@ const AppContent: React.FC = () => {
         <Route path="/crear-fichas" element={<RequireAuth><WorksheetGenerator user={user!} onWorksheetGenerated={async () => { if (user) await fetchUserProfile(user.id, user.email!); }} /></RequireAuth>} />
         <Route path="/crear-examenes" element={<RequireAuth><ExamGenerator user={user!} /></RequireAuth>} />
         <Route path="/crear-rubricas" element={<RequireAuth><RubricGenerator user={user!} /></RequireAuth>} />
-        
-        {/* 👇 AÑADIDO: La ruta privada para crear Situaciones de Aprendizaje 👇 */}
         <Route path="/crear-situaciones" element={<RequireAuth><SdaGenerator user={user!} /></RequireAuth>} />
-        
         <Route path="/payment-success" element={<RequireAuth><PaymentSuccess user={user!} onNavigate={handleNavigate} /></RequireAuth>} />
 
         {/* Rutas Semi-Públicas (Los invitados pueden verlas) */}
@@ -217,7 +217,7 @@ const AppContent: React.FC = () => {
 
       </Route>
 
-      {/* 👇 RUTAS SEO SATÉLITE (El Caballo de Troya) 👇 */}
+      {/* RUTAS SEO SATÉLITE (El Caballo de Troya) */}
       
       {/* 1. Mates Primaria */}
       <Route path="/recursos/fichas-matematicas-3-primaria" element={
