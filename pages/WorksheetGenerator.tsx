@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { generateWorksheet } from "../services/geminiService";
 import { Subject, EducationLevel, User } from "../types"; 
 import { supabase } from "../lib/supabase"; 
@@ -38,21 +38,9 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
   const currentCount = user?.generatedCount || 0;
   const isLimitReached = !isPremium && currentCount >= limit;
 
-  // --- EFECTO: INYECTAR HTML ---
-  useEffect(() => {
-    if (worksheetContent && iframeRef.current) {
-      const doc = iframeRef.current.contentWindow?.document;
-      if (doc) {
-        doc.open();
-        doc.write(worksheetContent);
-        doc.close();
-      }
-    }
-  }, [worksheetContent]);
-
   // --- 1. GENERAR ---
   const handleGenerate = async (e?: React.MouseEvent) => {
-    if (e) e.preventDefault(); // <-- PROTECCIÓN EXTRA: Evita recargas si está en un form implícito
+    if (e) e.preventDefault(); 
     if (!topic.trim()) { setError("Por favor, escribe un tema."); return; }
     
     if (isLimitReached && user?.id !== 'guest') {
@@ -268,7 +256,7 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
               </label>
             </div>
 
-            {/* BOTÓN GENERAR AHORA BIEN ESTRUCTURADO DENTRO DEL CONTENEDOR */}
+            {/* BOTÓN GENERAR */}
             <button 
               type="button"
               onClick={handleGenerate} 
@@ -349,16 +337,15 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
             </div>
           )}
 
-          {/* EL FOLIO A4 */}
-          {worksheetContent && !isLoading && (
-            <div className="w-full max-w-[800px] bg-white shadow-2xl min-h-[1131px] print:shadow-none print:max-w-none print:min-h-0 animate-fade-in-up">
-               <iframe 
-                 ref={iframeRef}
-                 className="w-full h-full min-h-[1131px] print:min-h-0"
-                 title="Vista Previa Ficha"
-               />
-            </div>
-          )}
+          {/* EL FOLIO A4 CON SRCDOC (El arreglo definitivo) */}
+          <div className={`w-full max-w-[800px] bg-white shadow-2xl transition-all duration-500 origin-top print:shadow-none print:max-w-none print:min-h-0 ${worksheetContent && !isLoading ? 'opacity-100 scale-100 min-h-[1131px]' : 'hidden'}`}>
+             <iframe 
+               ref={iframeRef}
+               srcDoc={worksheetContent} 
+               className="w-full h-full min-h-[1131px] print:min-h-0"
+               title="Vista Previa Ficha"
+             />
+          </div>
 
         </div>
       </div>
