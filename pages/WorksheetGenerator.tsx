@@ -3,7 +3,7 @@ import { generateWorksheet } from "../services/geminiService";
 import { Subject, EducationLevel, User } from "../types"; 
 import { supabase } from "../lib/supabase"; 
 import { 
-  Download, FileText, Copy, RefreshCw, Settings, Save, Crown, AlertCircle, Sparkles, BookOpen, Eye, Table, ChevronDown // <-- Añadido ChevronDown
+  Download, FileText, Copy, RefreshCw, Settings, Save, Crown, AlertCircle, Sparkles, BookOpen, Eye, Table, ChevronDown 
 } from "lucide-react"; 
 
 interface WorksheetGeneratorProps {
@@ -51,7 +51,8 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
   }, [worksheetContent]);
 
   // --- 1. GENERAR ---
-  const handleGenerate = async () => {
+  const handleGenerate = async (e?: React.MouseEvent) => {
+    if (e) e.preventDefault(); // <-- PROTECCIÓN EXTRA: Evita recargas si está en un form implícito
     if (!topic.trim()) { setError("Por favor, escribe un tema."); return; }
     
     if (isLimitReached && user?.id !== 'guest') {
@@ -61,7 +62,6 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
 
     setIsLoading(true); setError(""); setWorksheetContent("");
 
-    // LA MAGIA: Construimos las instrucciones finales ocultas
     let finalInstructions = instructions;
     
     if (isPremium) {
@@ -82,7 +82,7 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
         level, 
         topic, 
         exerciseCount, 
-        instructions: finalInstructions // Pasamos el prompt "vitaminado"
+        instructions: finalInstructions
       });
       
       setWorksheetContent(result.content);
@@ -176,8 +176,6 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
           
           {/* BLOQUE BÁSICO */}
           <div className="space-y-5">
-            
-            {/* SELECTOR ASIGNATURA REDISEÑADO */}
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Asignatura</label>
               <div className="relative group">
@@ -188,7 +186,6 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
               </div>
             </div>
 
-            {/* SELECTOR NIVEL REDISEÑADO */}
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5">Nivel</label>
               <div className="relative group">
@@ -228,8 +225,6 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
             </div>
 
             <div className={`space-y-3 ${!isPremium ? 'opacity-70 grayscale-[30%] pointer-events-none' : ''}`}>
-              
-              {/* LOMLOE */}
               <label className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-all ${lomloe ? 'border-[#4F75FF] bg-blue-50/50 ring-1 ring-[#4F75FF]/20' : 'border-gray-200 hover:border-blue-200 bg-white'}`}>
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${lomloe ? 'bg-[#4F75FF] text-white' : 'bg-slate-100 text-slate-500'}`}><BookOpen size={18}/></div>
@@ -244,7 +239,6 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
                 <input type="checkbox" checked={lomloe} onChange={(e) => setLomloe(e.target.checked)} className="hidden" />
               </label>
 
-              {/* DISLEXIA */}
               <label className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-all ${dyslexia ? 'border-[#4F75FF] bg-blue-50/50 ring-1 ring-[#4F75FF]/20' : 'border-gray-200 hover:border-blue-200 bg-white'}`}>
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${dyslexia ? 'bg-[#4F75FF] text-white' : 'bg-slate-100 text-slate-500'}`}><Eye size={18}/></div>
@@ -259,13 +253,12 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
                 <input type="checkbox" checked={dyslexia} onChange={(e) => setDyslexia(e.target.checked)} className="hidden" />
               </label>
 
-              {/* RÚBRICA */}
               <label className={`flex items-center justify-between p-3 border rounded-xl cursor-pointer transition-all ${rubric ? 'border-[#4F75FF] bg-blue-50/50 ring-1 ring-[#4F75FF]/20' : 'border-gray-200 hover:border-blue-200 bg-white'}`}>
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${rubric ? 'bg-[#4F75FF] text-white' : 'bg-slate-100 text-slate-500'}`}><Table size={18}/></div>
                   <div>
                     <p className="text-sm font-bold text-slate-800">Rúbrica de Evaluación</p>
-                    <p className="text-[11px] text-slate-500 leading-tight mt-0.5">Genera tabla de puntuaciones 0-10</p>
+                    <p className="text-[11px] text-slate-500 leading-tight mt-0.5">Genera tabla de puntuaciones</p>
                   </div>
                 </div>
                 <div className={`w-10 h-6 rounded-full p-1 transition-colors relative ${rubric ? 'bg-[#4F75FF]' : 'bg-slate-200'}`}>
@@ -273,38 +266,39 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
                 </div>
                 <input type="checkbox" checked={rubric} onChange={(e) => setRubric(e.target.checked)} className="hidden" />
               </label>
-
             </div>
+
+            {/* BOTÓN GENERAR AHORA BIEN ESTRUCTURADO DENTRO DEL CONTENEDOR */}
+            <button 
+              type="button"
+              onClick={handleGenerate} 
+              disabled={isLoading || !topic || isLimitReached} 
+              className={`w-full py-4 mt-8 text-white rounded-full font-bold transition-all duration-300 flex justify-center items-center gap-2 ${
+                isLimitReached 
+                  ? 'bg-slate-300 text-slate-500 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-[#4F75FF] to-[#38bdf8] hover:shadow-lg disabled:opacity-50'
+              }`}
+            >
+              {isLoading ? (
+                <><div className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"/> Creando Magia...</>
+              ) : isLimitReached ? (
+                <><Crown size={20} /> Límite Alcanzado</>
+              ) : (
+                <><Sparkles size={20} className="stroke-[2.5]" /> Generar Ficha</>
+              )}
+            </button>
+            
+            {error && <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100 flex items-start gap-2 mt-4"><AlertCircle size={16} className="shrink-0 mt-0.5" /> {error}</p>}
           </div>
 
-          {/* BOTÓN GENERAR REDISEÑADO PREMIUM */}
-          <button 
-            onClick={handleGenerate} 
-            disabled={isLoading || !topic || isLimitReached} 
-            className={`w-full py-4 mt-6 text-white rounded-full font-bold transition-all duration-300 transform flex justify-center items-center gap-2 ${
-              isLimitReached 
-                ? 'bg-slate-300 text-slate-500 cursor-not-allowed shadow-none' 
-                : 'bg-gradient-to-r from-[#4F75FF] to-[#38bdf8] hover:from-[#3b5bdb] hover:to-[#0284c7] hover:-translate-y-1 hover:shadow-xl hover:shadow-[#4F75FF]/40 disabled:opacity-50 disabled:transform-none disabled:shadow-none'
-            }`}
-          >
-            {isLoading ? (
-              <><div className="animate-spin h-5 w-5 border-2 border-white/30 border-t-white rounded-full"/> Creando Magia...</>
-            ) : isLimitReached ? (
-              <><Crown size={20} /> Límite Alcanzado</>
-            ) : (
-              <><Sparkles size={20} className="stroke-[2.5]" /> Generar Ficha</>
-            )}
-          </button>
-          
-          {error && <p className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-100 flex items-start gap-2"><AlertCircle size={16} className="shrink-0 mt-0.5" /> {error}</p>}
         </div>
       </div>
 
       {/* === PANEL DERECHO: VISOR === */}
       <div className="flex-1 flex flex-col h-full bg-slate-900 relative print:bg-white overflow-hidden">
         
-        {/* Barra superior (Tools) - Solo visible si hay contenido */}
-        <div className={`h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shadow-sm z-20 shrink-0 print:hidden transition-transform duration-300 ${worksheetContent ? 'translate-y-0' : '-translate-y-full absolute w-full'}`}>
+        {/* Barra superior (Tools) */}
+        <div className={`h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 md:px-6 shadow-sm z-20 shrink-0 print:hidden transition-all duration-300 ${worksheetContent ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0 absolute w-full'}`}>
           <div className="flex items-center gap-2 text-gray-800 font-bold">
             <div className="bg-[#4F75FF]/10 p-1.5 rounded-lg text-[#4F75FF]">
               <FileText size={18} className="stroke-[2.5]" />
@@ -312,25 +306,15 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
             Vista Previa
           </div>
           
-          {/* BOTONERÍA SUPERIOR REDISEÑADA */}
           <div className="flex items-center gap-2 md:gap-3">
             <button onClick={handleCopyHTML} className="hidden md:flex items-center justify-center w-10 h-10 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-colors" title="Copiar HTML">
               <Copy size={18} />
             </button>
-            
             <div className="hidden md:block w-px h-6 bg-gray-200 mx-1"></div>
-            
-            {/* Botón Píldora Gris */}
-            <button 
-              onClick={handleSave} 
-              disabled={isSaving}
-              className="flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 hover:text-slate-900 rounded-full transition-all duration-300"
-            >
+            <button onClick={handleSave} disabled={isSaving} className="flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-full transition-all">
               {isSaving ? "Guardando..." : <><Save size={16} className="stroke-[2.5]" /> Guardar</>}
             </button>
-
-            {/* Botón Píldora Oscuro */}
-            <button onClick={handlePrintOrPDF} className="flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-bold bg-slate-900 text-white rounded-full hover:bg-slate-800 transition-all duration-300 transform hover:-translate-y-0.5 hover:shadow-lg shadow-slate-900/20">
+            <button onClick={handlePrintOrPDF} className="flex items-center justify-center gap-2 px-6 py-2.5 text-sm font-bold bg-slate-900 text-white rounded-full hover:bg-slate-800 transition-all">
               <Download size={16} className="stroke-[2.5]" /> <span className="hidden sm:inline">Descargar PDF</span>
             </button>
           </div>
@@ -366,23 +350,18 @@ export const WorksheetGenerator: React.FC<WorksheetGeneratorProps> = ({ user, on
           )}
 
           {/* EL FOLIO A4 */}
-          <div className={`w-full max-w-[800px] bg-white shadow-2xl transition-all duration-500 origin-top print:shadow-none print:max-w-none ${worksheetContent && !isLoading ? 'opacity-100 scale-100 min-h-[1131px]' : 'opacity-0 scale-95 hidden'}`}>
-             <iframe 
-               ref={iframeRef}
-               className="w-full h-full min-h-[1131px] print:min-h-0"
-               title="Vista Previa Ficha"
-             />
-          </div>
+          {worksheetContent && !isLoading && (
+            <div className="w-full max-w-[800px] bg-white shadow-2xl min-h-[1131px] print:shadow-none print:max-w-none print:min-h-0 animate-fade-in-up">
+               <iframe 
+                 ref={iframeRef}
+                 className="w-full h-full min-h-[1131px] print:min-h-0"
+                 title="Vista Previa Ficha"
+               />
+            </div>
+          )}
 
         </div>
       </div>
     </div>
   );
 }
-
-// Pequeño componente extra solo visual para la carga
-const SparklesIcon = ({ size, className }: { size: number, className: string }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M12 3v18M3 12h18M18 6l-12 12M6 6l12 12" />
-  </svg>
-);
